@@ -138,7 +138,7 @@ export class GameRenderer {
         if (hash < 18) {
           ctx.fillStyle = '#ca8a04';
           ctx.beginPath();
-          ctx.arc(x + 24, y + 24, 18, 0, Math.PI * 2);
+          ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE * 0.375, 0, Math.PI * 2);
           ctx.fill();
         }
 
@@ -269,12 +269,12 @@ export class GameRenderer {
       ctx.lineTo(x + 34, y + 28);
     } else if (variation === 1) {
       ctx.moveTo(x + 34, y + 10);
-      ctx.lineTo(x + 24, y + 24);
+      ctx.lineTo(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
       ctx.lineTo(x + 30, y + 40);
     } else {
-      ctx.moveTo(x + 10, y + 24);
+      ctx.moveTo(x + TILE_SIZE * 0.2, y + TILE_SIZE / 2);
       ctx.lineTo(x + 38, y + 22);
-      ctx.moveTo(x + 24, y + 10);
+      ctx.moveTo(x + TILE_SIZE / 2, y + TILE_SIZE * 0.2);
       ctx.lineTo(x + 26, y + 38);
     }
     ctx.stroke();
@@ -356,7 +356,7 @@ export class GameRenderer {
       // Open broken bars and celebration glow
       ctx.fillStyle = 'rgba(250, 204, 21, 0.4)';
       ctx.beginPath();
-      ctx.arc(x + 24, y + 24, 28, 0, Math.PI * 2);
+      ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE * 0.46, 0, Math.PI * 2);
       ctx.fill();
 
       ctx.strokeStyle = '#a1a1aa';
@@ -383,7 +383,7 @@ export class GameRenderer {
       ctx.fillStyle = '#b45309';
       ctx.beginPath();
       ctx.moveTo(x, y + 12);
-      ctx.lineTo(x + 24, y + 2);
+      ctx.lineTo(x + TILE_SIZE / 2, y + TILE_SIZE * 0.04);
       ctx.lineTo(x + TILE_SIZE, y + 12);
       ctx.closePath();
       ctx.fill();
@@ -401,14 +401,14 @@ export class GameRenderer {
       ctx.strokeStyle = hasKey ? '#eab308' : '#a1a1aa';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(x + 24, y + 22, 4, Math.PI, 0);
+      ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE * 0.46, TILE_SIZE * 0.083, Math.PI, 0);
       ctx.stroke();
 
       if (hasKey) {
         // Glowing keyhole
         ctx.fillStyle = '#ffffff';
         ctx.beginPath();
-        ctx.arc(x + 24, y + 26, 1.5, 0, Math.PI * 2);
+        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE * 0.54, TILE_SIZE * 0.031, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -421,7 +421,7 @@ export class GameRenderer {
     // Glowing aura
     ctx.fillStyle = 'rgba(234, 179, 8, 0.3)';
     ctx.beginPath();
-    ctx.arc(x + 24, y + 24, 26, 0, Math.PI * 2);
+    ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE * 0.44, 0, Math.PI * 2);
     ctx.fill();
 
     // Chest box
@@ -437,7 +437,7 @@ export class GameRenderer {
 
     // Glowing Golden Trophy atop
     const float = Math.sin(this.animTimer * 4) * 3;
-    const tx = x + 24;
+    const tx = x + TILE_SIZE / 2;
     const ty = y + 10 + float;
 
     ctx.fillStyle = '#facc15';
@@ -467,9 +467,9 @@ export class GameRenderer {
     const ctx = this.ctx;
 
     pickups.forEach((item) => {
-      const px = item.gridX * TILE_SIZE + 24;
+      const px = item.gridX * TILE_SIZE + TILE_SIZE / 2;
       const bob = Math.sin(this.animTimer * 5 + item.bobOffset) * 4;
-      const py = item.gridY * TILE_SIZE + 24 + bob;
+      const py = item.gridY * TILE_SIZE + TILE_SIZE / 2 + bob;
 
       // Glow behind pickup
       ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
@@ -672,7 +672,7 @@ export class GameRenderer {
     const ctx = this.ctx;
 
     bombs.forEach((bomb) => {
-      const bx = bomb.gridX * TILE_SIZE + 24;
+      const bx = bomb.gridX * TILE_SIZE + TILE_SIZE / 2;
       const by = bomb.gridY * TILE_SIZE + 26;
 
       // Pulsate scale right before detonation
@@ -762,8 +762,8 @@ export class GameRenderer {
       const progress = 1 - exp.timer / EXPLOSION_DURATION; // 0 -> 1
 
       exp.cells.forEach((cell) => {
-        const cx = cell.gridX * TILE_SIZE + 24;
-        const cy = cell.gridY * TILE_SIZE + 24;
+        const cx = cell.gridX * TILE_SIZE + TILE_SIZE / 2;
+        const cy = cell.gridY * TILE_SIZE + TILE_SIZE / 2;
 
         ctx.save();
         ctx.translate(cx, cy);
@@ -895,7 +895,7 @@ export class GameRenderer {
     const ctx = this.ctx;
 
     animals.forEach((animal, idx) => {
-      const ax = animal.x * TILE_SIZE + 24;
+      const ax = animal.x * TILE_SIZE + TILE_SIZE / 2;
       let ay = animal.y * TILE_SIZE + 28;
 
       if (isCageUnlocked) {
