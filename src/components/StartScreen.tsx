@@ -1,29 +1,24 @@
 import React from 'react';
 import { Mail, Play, Trophy, Users, Volume, Volume1, Volume2, VolumeX, Shield, Zap, Sparkles } from 'lucide-react';
 import { SoundVolumeLevel } from '../audio/soundManager';
-import { CharacterConfig } from '../game/types';
 
 interface StartScreenProps {
   volumeLevel: SoundVolumeLevel;
-  selectedCharacter: CharacterConfig;
   onCycleVolume: () => void;
   onOpenContact: () => void;
   onStartSinglePlayer: () => void;
   onOpenMultiplayer: () => void;
   onOpenRanking: () => void;
-  onOpenCharacterSelect: () => void;
   onOpenAdmin: () => void;
 }
 
 export const StartScreen: React.FC<StartScreenProps> = ({
   volumeLevel,
-  selectedCharacter,
   onCycleVolume,
   onOpenContact,
   onStartSinglePlayer,
   onOpenMultiplayer,
   onOpenRanking,
-  onOpenCharacterSelect,
   onOpenAdmin,
 }) => {
   const [hasMenuBg, setHasMenuBg] = React.useState(false);
@@ -95,26 +90,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         )}
       </div>
 
-      {/* Selected Character Quick Selector */}
-      <div className="w-full max-w-xs z-10 mb-3">
-        <button
-          onClick={onOpenCharacterSelect}
-          className="w-full flex items-center justify-between px-3 py-2 bg-amber-950/80 backdrop-blur-md rounded-2xl border-2 border-amber-500/80 text-amber-200 hover:bg-amber-900 transition-colors shadow-lg"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{selectedCharacter.avatarEmoji}</span>
-            <div className="text-left">
-              <div className="text-[11px] text-amber-400 uppercase font-bold">Personaje Seleccionado</div>
-              <div className="text-xs font-black text-white">{selectedCharacter.name}</div>
-            </div>
-          </div>
-          <span className="text-[11px] font-black bg-amber-600/80 px-2 py-0.5 rounded-lg text-white">
-            CAMBIAR
-          </span>
-        </button>
-      </div>
-
-      {/* 3 Main Action Buttons */}
+      {/* Main Action Buttons */}
       <div className="w-full max-w-xs flex flex-col gap-2.5 z-10 mb-2">
         {/* 1. JUGAR (Modo Individual / Back) */}
         <button
