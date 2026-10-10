@@ -72,7 +72,7 @@ export class SpriteManager {
     const normalized = this.normalize(src);
     const entry = this.entries.get(normalized);
     if (entry?.status === 'loaded' && entry.image.naturalWidth > 0) return entry.image;
-    if (!entry || entry.status === 'error') void this.load(normalized);
+    if (!entry) void this.load(normalized);
     return null;
   }
 
