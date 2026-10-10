@@ -1040,3 +1040,13 @@ El movimiento de enemigos ahora reserva la celda actual y la celda objetivo de l
 
 INSPECCIÓN VISUAL DE HOJAS
 Se añadió una pantalla técnica accesible con el parámetro ?sprite-debug=1. Muestra los PNG originales, sus dimensiones naturales y una cuadrícula editable de filas/columnas para comprobar recortes sin modificar los archivos. Los valores de cuadrícula iniciales son pistas; no certifican por sí solos los límites de cada sprite.
+
+============================================================
+ACTUALIZACIÓN MULTIJUGADOR — 10 OCTUBRE 2026
+============================================================
+
+VICTORIA Y RANKING
+En modo multijugador, la pantalla de victoria y el guardado del ranking deben usar el jugador cuyo id coincide con GameEngine.winnerPlayerId, no asumir que el ganador es P1. El espejo del jugador y el tiempo final se congelan al terminar para evitar que el bucle de renderizado vuelva a sustituir al ganador mostrado.
+
+PUNTOS DE CAJAS
+Los 50 puntos por destruir una caja se asignan al dueño de la bomba que la destruyó, no automáticamente al jugador 1.
