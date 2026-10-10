@@ -13,6 +13,13 @@ export interface SpriteSheetLayout {
   frames?: number[];
 }
 
+export interface SpriteSourceRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface SpriteDrawOptions {
   x: number;
   y: number;
@@ -20,6 +27,8 @@ export interface SpriteDrawOptions {
   height: number;
   frame?: number;
   layout?: SpriteSheetLayout;
+  /** Explicit crop for sheets with uneven spacing or non-grid layouts. */
+  sourceRect?: SpriteSourceRect;
   flipX?: boolean;
   alpha?: number;
 }
@@ -104,9 +113,29 @@ export class SpriteManager {
     const image = this.getImage(src);
     if (!image || image.naturalWidth <= 0 || image.naturalHeight <= 0) return false;
 
-    const { x, y, width, height, frame = 0, layout, flipX = false, alpha = 1 } = options;
+    const { x, y, width, height, frame = 0, layout, sourceRect, flipX = false, alpha = 1 } = options;
     ctx.save();
     ctx.globalAlpha *= Math.max(0, Math.min(1, alpha));
+
+    if (sourceRect) {
+      const valid = sourceRect.x >= 0 && sourceRect.y >= 0 &&
+        sourceRect.width > 0 && sourceRect.height > 0 &&
+        sourceRect.x + sourceRect.width <= image.naturalWidth &&
+        sourceRect.y + sourceRect.height <= image.naturalHeight;
+      if (!valid) {
+        ctx.restore();
+        return false;
+      }
+      if (flipX) {
+        ctx.translate(x + width, y);
+        ctx.scale(-1, 1);
+        ctx.drawImage(image, sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, 0, 0, width, height);
+      } else {
+        ctx.drawImage(image, sourceRect.x, sourceRect.y, sourceRect.width, sourceRect.height, x, y, width, height);
+      }
+      ctx.restore();
+      return true;
+    }
 
     if (!layout) {
       if (flipX) {
