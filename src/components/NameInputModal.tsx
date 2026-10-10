@@ -46,7 +46,7 @@ export const NameInputModal: React.FC<NameInputModalProps> = ({
           <User size={34} className="text-amber-900" />
         </div>
 
-        <h3/ className="font-['Titan_One',sans-serif] text-2xl text-amber-950 text-center tracking-wide">
+        <h3 className="font-['Titan_One',sans-serif] text-2xl text-amber-950 text-center tracking-wide">
           NOMBRE DEL JUGADOR
         </h3>
         <p className="text-xs font-bold text-amber-800 text-center mt-1 mb-4">
