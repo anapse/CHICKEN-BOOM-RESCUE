@@ -45,7 +45,7 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                 key={char.id}
                 aria-pressed={isSelected}
                 onClick={() => setPendingId(char.id)}
-                className={`relative w-full p-3.5 rounded-2xl border-3 cursor-pointer transition-all flex items-center gap-3.5 ${
+                className={`relative w-full p-3.5 rounded-2xl border-3 cursor-pointer transition-all flex items-center gap-3.5 text-left ${
                   isSelected
                     ? 'bg-amber-100 border-amber-600 shadow-md scale-[1.02]'
                     : 'bg-white/80 border-amber-300 hover:bg-amber-50'
