@@ -1,0 +1,6 @@
+{
+  "name": "Chicken Boom Rescue",
+  "description": "Chicken Boom Rescue: Juego 2D de acción tipo cartoon mobile-first con animales antropomórficos, huevos con mecha, rescate de animales, multijugador y ranking Top 50.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

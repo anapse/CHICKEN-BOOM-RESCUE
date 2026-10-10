@@ -1,0 +1,508 @@
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { soundManager, SoundVolumeLevel } from './audio/soundManager';
+import { AdminDashboard } from './components/AdminDashboard';
+import { BottomPowerUps } from './components/BottomPowerUps';
+import { CharacterSelectModal } from './components/CharacterSelectModal';
+import { ContactModal } from './components/ContactModal';
+import { GameOverModal } from './components/GameOverModal';
+import { HowToPlayModal } from './components/HowToPlayModal';
+import { HUD } from './components/HUD';
+import { MultiplayerLobbyModal } from './components/MultiplayerLobbyModal';
+import { NameInputModal } from './components/NameInputModal';
+import { PauseModal } from './components/PauseModal';
+import { StartScreen } from './components/StartScreen';
+import { Top50Modal } from './components/Top50Modal';
+import { VictoryModal } from './components/VictoryModal';
+import { CHARACTERS, GRID_COLS, GRID_ROWS, TILE_SIZE } from './game/constants';
+import { GameEngine } from './game/engine';
+import { GameRenderer } from './game/renderer';
+import { CharacterConfig, GameMode, GameStatus, PlayerState } from './game/types';
+import { saveRankingScore, trackAnalytics } from './firebase/services';
+
+export default function App() {
+  const [status, setStatus] = useState<GameStatus>('menu');
+  const [mode, setMode] = useState<GameMode>('single');
+  const [playerName, setPlayerName] = useState<string>('Pollito Rambo');
+  const [selectedCharacter, setSelectedCharacter] = useState<CharacterConfig>(CHARACTERS[0]);
+  const [volumeLevel, setVolumeLevel] = useState<SoundVolumeLevel>(100);
+  const [currentLevel] = useState<number>(1);
+  const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
+  const [showContact, setShowContact] = useState<boolean>(false);
+  const [showTop50, setShowTop50] = useState<boolean>(false);
+  const [showCharSelect, setShowCharSelect] = useState<boolean>(false);
+  const [showMultiplayerLobby, setShowMultiplayerLobby] = useState<boolean>(false);
+
+  // Canvas & Game Engine references
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const engineRef = useRef<GameEngine>(new GameEngine());
+  const rendererRef = useRef<GameRenderer | null>(null);
+  const requestRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
+
+  // Active player state mirror for reactive React HUD
+  const [playerMirror, setPlayerMirror] = useState<PlayerState | null>(null);
+  const [timeRemainingMirror, setTimeRemainingMirror] = useState<number>(300);
+
+  // Check URL path for /admin route
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      if (path === '/admin' || hash === '#/admin') {
+        setStatus('admin');
+      }
+    }
+  }, []);
+
+  // Track initial page visit in Firebase Analytics
+  useEffect(() => {
+    trackAnalytics('page_visit');
+    // Load stored player name
+    const storedName = localStorage.getItem('cbr_player_name');
+    if (storedName) {
+      setPlayerName(storedName);
+    }
+  }, []);
+
+  // Cycle volume
+  const handleCycleVolume = () => {
+    const next = soundManager.cycleVolume();
+    setVolumeLevel(next);
+  };
+
+  // Start Single Player Flow -> Open Name Input Modal first
+  const handleStartSinglePlayerPrompt = () => {
+    soundManager.resumeContext();
+    soundManager.playClick();
+    setMode('single');
+    setStatus('name_input');
+  };
+
+  // Launch Game after name confirmed
+  const handleLaunchGame = useCallback((name: string) => {
+    setPlayerName(name);
+    localStorage.setItem('cbr_player_name', name);
+    soundManager.playClick();
+    soundManager.playMusic('game');
+
+    trackAnalytics('game_start', mode);
+
+    const engine = engineRef.current;
+    engine.initGame({
+      mode,
+      player1Name: name,
+      player1Char: selectedCharacter.id,
+    });
+
+    setPlayerMirror({ ...engine.players[0] });
+    setTimeRemainingMirror(engine.timeRemaining);
+    setStatus('playing');
+  }, [mode, selectedCharacter]);
+
+  // Launch Multiplayer Match
+  const handleLaunchMultiplayer = useCallback((config: {
+    player1Name: string;
+    player1Char: 'rambo_macho' | 'rambo_hembra' | 'exploradora';
+    player2Name: string;
+    player2Char: 'rambo_macho' | 'rambo_hembra' | 'exploradora';
+  }) => {
+    soundManager.playClick();
+    soundManager.playMusic('game');
+    setMode('multiplayer');
+    setShowMultiplayerLobby(false);
+
+    trackAnalytics('game_start', 'multiplayer');
+
+    const engine = engineRef.current;
+    engine.initGame({
+      mode: 'multiplayer',
+      player1Name: config.player1Name,
+      player1Char: config.player1Char,
+      player2Name: config.player2Name,
+      player2Char: config.player2Char,
+    });
+
+    setPlayerMirror({ ...engine.players[0] });
+    setTimeRemainingMirror(engine.timeRemaining);
+    setStatus('playing');
+  }, []);
+
+  // Return to Menu
+  const handleQuitToMenu = useCallback(() => {
+    soundManager.playClick();
+    soundManager.playMusic('menu');
+    setStatus('menu');
+  }, []);
+
+  // Resume after pause
+  const handleResume = useCallback(() => {
+    soundManager.playClick();
+    setStatus('playing');
+  }, []);
+
+  // Restart current match
+  const handleRestart = useCallback(() => {
+    soundManager.playClick();
+    soundManager.playMusic('game');
+    const engine = engineRef.current;
+    engine.initGame({
+      mode,
+      player1Name: playerName,
+      player1Char: selectedCharacter.id,
+    });
+    setPlayerMirror({ ...engine.players[0] });
+    setTimeRemainingMirror(engine.timeRemaining);
+    setStatus('playing');
+  }, [mode, playerName, selectedCharacter]);
+
+  // Victory Handler
+  const handleVictory = useCallback(async () => {
+    const engine = engineRef.current;
+    const p1 = engine.players[0];
+    const timeBonus = Math.floor(engine.timeRemaining * 10);
+    const finalScore = p1 ? p1.score + timeBonus : 0;
+
+    trackAnalytics('game_victory', mode);
+
+    if (p1) {
+      await saveRankingScore({
+        playerName: p1.name,
+        score: finalScore,
+        level: currentLevel,
+        rescued: true,
+      });
+    }
+
+    setStatus('victory');
+  }, [currentLevel, mode]);
+
+  // Game Over Handler
+  const handleGameOver = useCallback(async () => {
+    const engine = engineRef.current;
+    const p1 = engine.players[0];
+
+    trackAnalytics('game_over', mode);
+
+    if (p1 && p1.score > 0) {
+      await saveRankingScore({
+        playerName: p1.name,
+        score: p1.score,
+        level: currentLevel,
+        rescued: false,
+      });
+    }
+
+    setStatus('gameover');
+  }, [currentLevel, mode]);
+
+  // Main Game Loop (Canvas updates & rendering)
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (!rendererRef.current) {
+      rendererRef.current = new GameRenderer(ctx);
+    }
+
+    const engine = engineRef.current;
+    const renderer = rendererRef.current;
+
+    const viewportW = 11 * TILE_SIZE; // 528px (1 screen width)
+    const viewportH = 17 * TILE_SIZE; // 816px (screen height)
+
+    let isRunning = true;
+
+    const gameLoop = (timestamp: number) => {
+      if (!isRunning) return;
+
+      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+      const deltaTime = Math.min((timestamp - lastTimeRef.current) / 1000, 0.1);
+      lastTimeRef.current = timestamp;
+
+      if (status === 'playing') {
+        engine.update(deltaTime, viewportW);
+
+        // Update mirrors for React HUD
+        if (engine.players[0]) {
+          setPlayerMirror({ ...engine.players[0] });
+        }
+        setTimeRemainingMirror(engine.timeRemaining);
+
+        // Check victory or game over conditions
+        if (engine.isVictory && status === 'playing') {
+          handleVictory();
+        } else if (engine.isGameOver && status === 'playing') {
+          handleGameOver();
+        }
+      }
+
+      // Render world
+      renderer.render({
+        grid: engine.grid,
+        players: engine.players,
+        enemies: engine.enemies,
+        bombs: engine.bombs,
+        explosions: engine.explosions,
+        pickups: engine.pickups,
+        trappedAnimals: engine.trappedAnimals,
+        floatingTexts: engine.floatingTexts,
+        cameraX: engine.cameraX,
+        viewportWidth: viewportW,
+        viewportHeight: viewportH,
+        hasKey: engine.players[0]?.hasKey || false,
+        isCageUnlocked: engine.isCageUnlocked,
+        deltaTime,
+      });
+
+      requestRef.current = requestAnimationFrame(gameLoop);
+    };
+
+    requestRef.current = requestAnimationFrame(gameLoop);
+
+    return () => {
+      isRunning = false;
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [status, handleVictory, handleGameOver]);
+
+  // Keyboard Controls (WASD / Arrows, Space, E, Esc)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (status !== 'playing') return;
+      const engine = engineRef.current;
+
+      // P1 Controls
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+        engine.movePlayer('p1', 'UP');
+      } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+        engine.movePlayer('p1', 'DOWN');
+      } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        engine.movePlayer('p1', 'LEFT');
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        engine.movePlayer('p1', 'RIGHT');
+      } else if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        engine.placeBomb('p1');
+      } else if (e.key === 'e' || e.key === 'E') {
+        engine.triggerRemoteBomb('p1');
+      } else if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+        setStatus('paused');
+      }
+
+      // P2 Controls in Multiplayer Mode (IJKL + Enter)
+      if (mode === 'multiplayer') {
+        if (e.key === 'i' || e.key === 'I') {
+          engine.movePlayer('p2', 'UP');
+        } else if (e.key === 'k' || e.key === 'K') {
+          engine.movePlayer('p2', 'DOWN');
+        } else if (e.key === 'j' || e.key === 'J') {
+          engine.movePlayer('p2', 'LEFT');
+        } else if (e.key === 'l' || e.key === 'L') {
+          engine.movePlayer('p2', 'RIGHT');
+        } else if (e.key === 'Enter') {
+          engine.placeBomb('p2');
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [status, mode]);
+
+  // Swipe gesture detection on Canvas for mobile players
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (status !== 'playing') return;
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (status !== 'playing' || !touchStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - touchStartRef.current.x;
+    const dy = touch.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+
+    const threshold = 25; // min swipe pixels
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > threshold) {
+        engineRef.current.movePlayer('p1', 'RIGHT');
+      } else if (dx < -threshold) {
+        engineRef.current.movePlayer('p1', 'LEFT');
+      }
+    } else {
+      if (dy > threshold) {
+        engineRef.current.movePlayer('p1', 'DOWN');
+      } else if (dy < -threshold) {
+        engineRef.current.movePlayer('p1', 'UP');
+      }
+    }
+  };
+
+  // If Admin route requested
+  if (status === 'admin') {
+    return (
+      <AdminDashboard
+        onBackToGame={() => {
+          setStatus('menu');
+        }}
+      />
+    );
+  }
+
+  const viewportW = 11 * TILE_SIZE; // 528px
+  const viewportH = 17 * TILE_SIZE; // 816px
+
+  return (
+    <main className="w-full h-screen h-[100dvh] flex items-center justify-center bg-stone-950 overflow-hidden select-none">
+      {/* 9:16 Vertical Screen Frame (Mobile-First Viewport in PC with themed borders) */}
+      <div className="relative h-full aspect-[9/16] max-h-screen max-w-full flex flex-col items-center justify-center overflow-hidden shadow-2xl border-x-4 border-amber-950/80 bg-black">
+        {/* =========================================
+            LAYER 1: GAME CANVAS (Continuous rendering)
+            ========================================= */}
+        <canvas
+          ref={canvasRef}
+          width={viewportW}
+          height={viewportH}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="w-full h-full object-contain block bg-green-800"
+          style={{ imageRendering: 'pixelated' }}
+        />
+
+        {/* =========================================
+            LAYER 2: REACT HUD (TOP 10% OVERLAY)
+            ========================================= */}
+        {playerMirror && status === 'playing' && (
+          <HUD
+            player={playerMirror}
+            timeRemaining={timeRemainingMirror}
+            currentLevel={currentLevel}
+            volumeLevel={volumeLevel}
+            onCycleVolume={handleCycleVolume}
+            onPause={() => setStatus('paused')}
+            onOpenHowToPlay={() => setShowHowToPlay(true)}
+          />
+        )}
+
+        {/* =========================================
+            LAYER 3: REACT BOTTOM BAR & CONTROLS (BOTTOM 10%)
+            ========================================= */}
+        {playerMirror && status === 'playing' && (
+          <BottomPowerUps
+            player={playerMirror}
+            hasActiveRemoteBomb={engineRef.current.bombs.some(
+              (b) => b.ownerId === playerMirror.id && b.isRemote && !b.detonated
+            )}
+            onMove={(dir) => engineRef.current.movePlayer('p1', dir)}
+            onPlaceBomb={() => engineRef.current.placeBomb('p1')}
+            onTriggerRemote={() => engineRef.current.triggerRemoteBomb('p1')}
+          />
+        )}
+
+        {/* =========================================
+            LAYER 4: START SCREEN OVERLAY
+            ========================================= */}
+        {status === 'menu' && (
+          <div className="absolute inset-0 z-30">
+            <StartScreen
+              volumeLevel={volumeLevel}
+              selectedCharacter={selectedCharacter}
+              onCycleVolume={handleCycleVolume}
+              onOpenContact={() => setShowContact(true)}
+              onStartSinglePlayer={handleStartSinglePlayerPrompt}
+              onOpenMultiplayer={() => setShowMultiplayerLobby(true)}
+              onOpenRanking={() => setShowTop50(true)}
+              onOpenCharacterSelect={() => setShowCharSelect(true)}
+              onOpenAdmin={() => setStatus('admin')}
+            />
+          </div>
+        )}
+
+        {/* =========================================
+            LAYER 5: REACT MODALS
+            ========================================= */}
+        {/* 1. Mandatory Name Input Modal before playing */}
+        {status === 'name_input' && (
+          <NameInputModal
+            initialName={playerName}
+            selectedCharacter={selectedCharacter}
+            onConfirm={handleLaunchGame}
+            onCancel={() => setStatus('menu')}
+          />
+        )}
+
+        {/* 2. Character Selection Modal */}
+        {showCharSelect && (
+          <CharacterSelectModal
+            selectedId={selectedCharacter.id}
+            onSelect={(char) => {
+              setSelectedCharacter(char);
+              setShowCharSelect(false);
+            }}
+            onClose={() => setShowCharSelect(false)}
+          />
+        )}
+
+        {/* 3. Multiplayer Lobby Modal */}
+        {showMultiplayerLobby && (
+          <MultiplayerLobbyModal
+            onStartMatch={handleLaunchMultiplayer}
+            onClose={() => setShowMultiplayerLobby(false)}
+          />
+        )}
+
+        {/* 4. How To Play Modal */}
+        {showHowToPlay && (
+          <HowToPlayModal onClose={() => setShowHowToPlay(false)} />
+        )}
+
+        {/* 5. Contact Modal */}
+        {showContact && (
+          <ContactModal onClose={() => setShowContact(false)} />
+        )}
+
+        {/* 6. Top 50 Rankings Modal */}
+        {showTop50 && (
+          <Top50Modal onClose={() => setShowTop50(false)} />
+        )}
+
+        {/* 7. Pause Modal */}
+        {status === 'paused' && (
+          <PauseModal
+            onResume={handleResume}
+            onRestart={handleRestart}
+            onQuitToMenu={handleQuitToMenu}
+          />
+        )}
+
+        {/* 8. Victory Modal */}
+        {status === 'victory' && playerMirror && (
+          <VictoryModal
+            player={playerMirror}
+            timeRemaining={timeRemainingMirror}
+            mode={mode}
+            onRestart={handleRestart}
+            onQuitToMenu={handleQuitToMenu}
+          />
+        )}
+
+        {/* 9. Game Over Modal */}
+        {status === 'gameover' && playerMirror && (
+          <GameOverModal
+            player={playerMirror}
+            onRestart={handleRestart}
+            onQuitToMenu={handleQuitToMenu}
+          />
+        )}
+      </div>
+    </main>
+  );
+}

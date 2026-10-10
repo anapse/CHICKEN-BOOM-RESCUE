@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "RankingEntry": {
+      "title": "RankingEntry",
+      "description": "Player score record for Top 50 leaderboard in Chicken Boom Rescue",
+      "type": "object",
+      "properties": {
+        "playerName": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "score": {
+          "type": "number"
+        },
+        "level": {
+          "type": "number"
+        },
+        "rescued": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "playerName",
+        "score"
+      ]
+    },
+    "AnalyticsVisit": {
+      "title": "AnalyticsVisit",
+      "description": "Site visits and game play metrics for ANAPSE Video dashboard",
+      "type": "object",
+      "properties": {
+        "visitorId": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "eventType": {
+          "type": "string",
+          "maxLength": 50
+        },
+        "gameMode": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "device": {
+          "type": "string",
+          "maxLength": 30
+        },
+        "timestamp": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "visitorId",
+        "eventType",
+        "timestamp"
+      ]
+    }
+  },
+  "firestore": {
+    "/ranking/{rankingId}": {
+      "schema": "RankingEntry",
+      "description": "Global player rankings"
+    },
+    "/analytics/{visitId}": {
+      "schema": "AnalyticsVisit",
+      "description": "Game visits and play counters for /admin dashboard"
+    }
+  }
+}

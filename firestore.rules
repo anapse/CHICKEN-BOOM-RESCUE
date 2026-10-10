@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helpers
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidRankingEntry(data) {
+      return data.keys().hasAll(['playerName', 'score'])
+        && data.keys().hasOnly(['playerName', 'score', 'level', 'rescued', 'createdAt'])
+        && data.playerName is string
+        && data.playerName.size() > 0
+        && data.playerName.size() <= 50
+        && data.score is number
+        && data.score >= 0
+        && (!('level' in data) || (data.level is number && data.level >= 1))
+        && (!('rescued' in data) || data.rescued is bool)
+        && (!('createdAt' in data) || (data.createdAt is string && data.createdAt.size() <= 60));
+    }
+
+    function isValidAnalytics(data) {
+      return data.keys().hasAll(['visitorId', 'eventType', 'timestamp'])
+        && data.keys().hasOnly(['visitorId', 'eventType', 'gameMode', 'device', 'timestamp'])
+        && data.visitorId is string
+        && data.visitorId.size() <= 100
+        && data.eventType is string
+        && data.eventType.size() <= 50
+        && data.timestamp is string
+        && data.timestamp.size() <= 60
+        && (!('gameMode' in data) || (data.gameMode is string && data.gameMode.size() <= 30))
+        && (!('device' in data) || (data.device is string && data.device.size() <= 30));
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Ranking collection
+    match /ranking/{rankingId} {
+      allow read: if true;
+      allow create: if isValidId(rankingId) && isValidRankingEntry(incoming());
+      allow update, delete: if false;
+    }
+
+    // Analytics collection
+    match /analytics/{visitId} {
+      allow read: if true;
+      allow create: if isValidId(visitId) && isValidAnalytics(incoming());
+      allow update, delete: if false;
+    }
+  }
+}
