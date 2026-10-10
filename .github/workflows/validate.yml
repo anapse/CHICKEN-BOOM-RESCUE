@@ -34,4 +34,4 @@ jobs:
       - name: Production build
         run: npm run build
       - name: PNG sprite inventory summary
-        run: node scripts/inventory-sprites.mjs --markdown | tee sprite-inventory.md >> "$GITHUB_STEP_SUMMARY"
+        run: node scripts/inventory-sprites.mjs --markdown | tee sprite-inventory.md | tee -a "$GITHUB_STEP_SUMMARY"
