@@ -207,10 +207,22 @@ export class GameRenderer {
   }
 
   private drawRockWall(x: number, y: number, _gx: number, _gy: number) {
-    spriteManager.draw(this.ctx, SPRITE_ASSETS.woodStoneTiles.src, {
-      x, y, width: TILE_SIZE, height: TILE_SIZE,
-      sourceRect: { x: 887, y: 0, width: 887, height: 887 },
-    });
+    const ctx = this.ctx;
+    const sprite = getAssetImage(SPRITE_ASSETS.woodStoneTiles.src);
+    if (!sprite || !sprite.complete || sprite.naturalWidth <= 0) return;
+
+    // Stone panel is on the right half of the supplied atlas. Zoom slightly so
+    // the stones visually sit closer together, then rotate 50° clockwise as requested.
+    ctx.save();
+    ctx.translate(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
+    ctx.rotate((50 * Math.PI) / 180);
+    const drawSize = TILE_SIZE * 1.42;
+    ctx.drawImage(
+      sprite,
+      887, 0, 887, 887,
+      -drawSize / 2, -drawSize / 2, drawSize, drawSize,
+    );
+    ctx.restore();
   }
 
   private drawWoodenCrate(x: number, y: number) {
@@ -438,24 +450,22 @@ export class GameRenderer {
 
   private drawEggPowerupPickup(x: number, y: number, count: number) {
     const ctx = this.ctx;
-    // Badge background
+    // Larger pickup badge and egg for better readability on the enlarged grid.
     ctx.fillStyle = '#ea580c';
     ctx.beginPath();
-    ctx.roundRect(x - 14, y - 14, 28, 28, 6);
+    ctx.roundRect(x - 20, y - 20, 40, 40, 9);
     ctx.fill();
 
-    // Mini egg
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.ellipse(x - 4, y, 5, 7, 0, 0, Math.PI * 2);
+    ctx.ellipse(x - 6, y, 8, 12, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Number text
     ctx.fillStyle = '#fef08a';
-    ctx.font = 'bold 12px sans-serif';
+    ctx.font = 'bold 16px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(`x${count}`, x + 6, y);
+    ctx.fillText(`x${count}`, x + 9, y);
   }
 
   private drawSpeedBootPickup(x: number, y: number) {
