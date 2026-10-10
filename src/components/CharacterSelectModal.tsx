@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { X, Check, Shield, Zap, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CHARACTERS } from '../game/constants';
 import { CharacterConfig } from '../game/types';
-import { SPRITE_ASSETS } from '../game/spriteAssets';
 import { spriteManager } from '../game/SpriteManager';
 
 interface CharacterSelectModalProps {
@@ -12,9 +11,10 @@ interface CharacterSelectModalProps {
 }
 
 const CHARACTER_IMAGES: Record<string, string> = {
-  rambo_macho: SPRITE_ASSETS.pollitoRambo.src,
-  rambo_hembra: SPRITE_ASSETS.pollitaRambo.src,
-  exploradora: SPRITE_ASSETS.gallinitaExploradora.src,
+  // Use the large standalone character illustrations for the selector, never animation sprite sheets.
+  rambo_macho: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_43.png',
+  rambo_hembra: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_56.png',
+  exploradora: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_04.png',
 };
 
 export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
