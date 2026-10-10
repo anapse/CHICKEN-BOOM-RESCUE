@@ -211,11 +211,11 @@ export class GameRenderer {
     const sprite = getAssetImage(SPRITE_ASSETS.woodStoneTiles.src);
     if (!sprite || !sprite.complete || sprite.naturalWidth <= 0) return;
 
-    // Stone panel is on the right half of the supplied atlas. Zoom slightly so
-    // the stones visually sit closer together, then rotate 50° clockwise as requested.
+    // Rotate only the left-side wall stones 90° clockwise, as requested.
+    // Wooden crates and other tiles are unaffected.
     ctx.save();
     ctx.translate(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
-    ctx.rotate((50 * Math.PI) / 180);
+    ctx.rotate(Math.PI / 2);
     const drawSize = TILE_SIZE * 1.42;
     ctx.drawImage(
       sprite,
