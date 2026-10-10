@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Play, Trophy, Users, Volume, Volume1, Volume2, VolumeX, Shield, Zap, Sparkles } from 'lucide-react';
 import { SoundVolumeLevel } from '../audio/soundManager';
+import { spriteManager } from '../game/SpriteManager';
 
 interface StartScreenProps {
   volumeLevel: SoundVolumeLevel;
@@ -25,15 +26,9 @@ export const StartScreen: React.FC<StartScreenProps> = ({
   const [hasLogoImg, setHasLogoImg] = React.useState(false);
 
   React.useEffect(() => {
-    // Check fondomenu.png
-    const bg = new Image();
-    bg.src = './sprites/fondomenu.png';
-    bg.onload = () => setHasMenuBg(true);
-
-    // Check logo.png
-    const logo = new Image();
-    logo.src = './sprites/logo.png';
-    logo.onload = () => setHasLogoImg(true);
+    // Reuse the centralized asset cache for menu art.
+    void spriteManager.load('./sprites/fondomenu.png').then((image) => setHasMenuBg(Boolean(image)));
+    void spriteManager.load('./sprites/logo.png').then((image) => setHasLogoImg(Boolean(image)));
   }, []);
 
   return (
