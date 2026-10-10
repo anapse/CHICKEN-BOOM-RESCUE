@@ -822,7 +822,6 @@ export class GameRenderer {
   private renderEnemies(enemies: EnemyState[]) {
     const ctx = this.ctx;
     const foxPath = './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_43.png';
-    const foxSheet = getAssetImage(SPRITE_ASSETS.foxEnemy.src);
     const foxIllustration = getAssetImage(foxPath);
 
     enemies.forEach((enemy) => {
@@ -839,7 +838,7 @@ export class GameRenderer {
 
       // Prefer the existing large fox artwork; use the sprite sheet only if no
       // standalone illustration is available. Do not draw a procedural SVG-like fox.
-      const fox = foxIllustration ?? foxSheet;
+      const fox = foxIllustration;
       if (fox && fox.complete && fox.naturalWidth > 0) {
         const size = TILE_SIZE * 1.75;
         ctx.drawImage(fox, x + (TILE_SIZE - size) / 2, y + TILE_SIZE - size, size, size);
@@ -858,12 +857,7 @@ export class GameRenderer {
       exploradora: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_56.png',
     };
     const image = getAssetImage(characterImages[player.characterId] ?? characterImages.rambo_macho);
-    const characterSheet = player.characterId === 'rambo_hembra'
-      ? getAssetImage(SPRITE_ASSETS.pollitaRambo.src)
-      : player.characterId === 'exploradora'
-        ? getAssetImage(SPRITE_ASSETS.gallinitaExploradora.src)
-        : getAssetImage(SPRITE_ASSETS.pollitoRambo.src);
-    const sprite = characterSheet ?? image;
+    const sprite = image;
 
     ctx.save();
     if (player.invulnerableTimer > 0 && Math.floor(this.animTimer * 20) % 2 === 0) {
@@ -873,16 +867,6 @@ export class GameRenderer {
 
     // Shield/ghost effects remain simple gameplay indicators; the character itself
     // always comes from the provided PNG artwork/sprite sheet.
-    if (player.hasShield) {
-      const shield = getAssetImage(SPRITE_ASSETS.iconSheet.src);
-      if (shield && shield.complete && shield.naturalWidth > 0) {
-        const size = TILE_SIZE * 1.9;
-        ctx.globalAlpha *= 0.8;
-        ctx.drawImage(shield, x + (TILE_SIZE - size) / 2, y + (TILE_SIZE - size) / 2, size, size);
-        ctx.globalAlpha /= 0.8;
-      }
-    }
-
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
       const size = TILE_SIZE * 1.75;
       ctx.drawImage(sprite, x + (TILE_SIZE - size) / 2, y + TILE_SIZE - size, size, size);
