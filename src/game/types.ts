@@ -42,6 +42,7 @@ export interface PlayerState {
   coins: number;
   hasKey: boolean;
   speedMultiplier: number;
+  speedBoostTimer: number;
   isGhost: boolean;
   ghostTimer: number;
   hasShield: boolean;
