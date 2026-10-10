@@ -43,7 +43,10 @@ function parsePng(buffer) {
   let transparentPixels = null, semiTransparentPixels = null;
 
   // Exact alpha-pixel scan for non-interlaced PNGs with supported standard color types.
-  if (channels && interlace === 0 && [1, 2, 4, 8, 16].includes(bitDepth) && imageData.length) {
+  const pixelScanSupported = (colorType === 6 || colorType === 4) && bitDepth >= 8 ||
+    colorType === 3 && bitDepth === 8 ||
+    (colorType === 2 || colorType === 0) && Boolean(transparencyChunk) && bitDepth === 8;
+  if (channels && interlace === 0 && [1, 2, 4, 8, 16].includes(bitDepth) && imageData.length && pixelScanSupported) {
     const packed = inflateSync(Buffer.concat(imageData));
     const bitsPerPixel = channels * bitDepth;
     const rowBytes = Math.ceil(width * bitsPerPixel / 8);
@@ -120,11 +123,9 @@ function parsePng(buffer) {
     transparency = interlace !== 0 ? 'alpha-present-interlaced-pixel-scan-unsupported' : 'alpha-present-pixel-scan-unsupported';
   }
 
-  const gridHint = /4x4/i.test(path.basename(buffer.fileName ?? '')) ? '4x4 (filename hint only)' : 'not declared';
   return {
     validPng: true, width, height, bitDepth, colorType, interlace,
     alphaChannelOrTRNS: hasAlpha, transparency, transparentPixels, semiTransparentPixels,
-    gridHint,
   };
 }
 
