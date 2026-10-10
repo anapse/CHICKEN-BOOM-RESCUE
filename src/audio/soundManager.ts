@@ -16,6 +16,7 @@ class SoundManager {
   private sfxGain: GainNode | null = null;
   private currentTrack: 'none' | 'menu' | 'game' = 'none';
   private musicInterval: any = null;
+  private currentAudioElement: HTMLAudioElement | null = null;
   private isInitialized = false;
 
   constructor() {
@@ -107,16 +108,30 @@ class SoundManager {
     this.stopMusic();
     this.currentTrack = track;
 
-    if (!this.ctx || !this.musicGain) return;
-
-    if (track === 'menu') {
-      this.startMenuMusic();
-    } else {
-      this.startGameMusic();
-    }
+    // Check if MP3 file exists in public/sonidos/
+    const filePath = track === 'menu' ? './sonidos/musica_menu.mp3' : './sonidos/musica_juego.mp3';
+    const audio = new Audio(filePath);
+    audio.loop = true;
+    audio.volume = Math.max(0, Math.min(1, (this.volumeLevel / 100) * 0.5));
+    
+    audio.play().then(() => {
+      this.currentAudioElement = audio;
+    }).catch(() => {
+      // Fallback to Web Audio API synthesis
+      if (!this.ctx || !this.musicGain) return;
+      if (track === 'menu') {
+        this.startMenuMusic();
+      } else {
+        this.startGameMusic();
+      }
+    });
   }
 
   public stopMusic() {
+    if (this.currentAudioElement) {
+      this.currentAudioElement.pause();
+      this.currentAudioElement = null;
+    }
     if (this.musicInterval) {
       clearInterval(this.musicInterval);
       this.musicInterval = null;

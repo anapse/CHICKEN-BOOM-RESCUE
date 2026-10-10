@@ -10,6 +10,25 @@ import {
   TrappedAnimal,
 } from './types';
 
+// Asset Cache for files in public/sprits and public/fondos
+const assetCache: Record<string, HTMLImageElement | null> = {};
+
+function getAssetImage(path: string): HTMLImageElement | null {
+  if (assetCache[path] !== undefined) return assetCache[path];
+  if (typeof window === 'undefined') return null;
+
+  const img = new Image();
+  img.src = path;
+  img.onload = () => {
+    assetCache[path] = img;
+  };
+  img.onerror = () => {
+    assetCache[path] = null;
+  };
+  assetCache[path] = null;
+  return null;
+}
+
 export class GameRenderer {
   private ctx: CanvasRenderingContext2D;
   private animTimer = 0;
@@ -98,6 +117,18 @@ export class GameRenderer {
     const totalW = cols * TILE_SIZE;
     const totalH = rows * TILE_SIZE;
 
+    // Check if user has uploaded fondojuego.png to public/sprites/
+    const bgImg = getAssetImage('./sprites/fondojuego.png') || getAssetImage('./fondojuego.png');
+    if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
+      // Repeat texture across the 3 screens
+      const pat = ctx.createPattern(bgImg, 'repeat');
+      if (pat) {
+        ctx.fillStyle = pat;
+        ctx.fillRect(0, 0, totalW, totalH);
+        return;
+      }
+    }
+
     // Base lush green
     ctx.fillStyle = '#65a30d';
     ctx.fillRect(0, 0, totalW, totalH);
@@ -181,6 +212,12 @@ export class GameRenderer {
   // 1. SOLID BRICK PERIMETER WALL
   private drawBrickWall(x: number, y: number) {
     const ctx = this.ctx;
+    const sprite = getAssetImage('./sprites/ladrillo.png') || getAssetImage('./ladrillo.png');
+    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+      ctx.drawImage(sprite, x, y, TILE_SIZE, TILE_SIZE);
+      return;
+    }
+
     ctx.fillStyle = '#7c2d12'; // Rich brick red
     ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
 
@@ -208,6 +245,12 @@ export class GameRenderer {
   private drawRockWall(x: number, y: number, gx: number, gy: number) {
     const ctx = this.ctx;
     const variation = (gx * 13 + gy * 7) % 3;
+
+    const rockSprite = getAssetImage(`./sprites/roca${variation + 1}.png`) || getAssetImage('./sprites/roca.png') || getAssetImage('./roca.png');
+    if (rockSprite && rockSprite.complete && rockSprite.naturalWidth > 0) {
+      ctx.drawImage(rockSprite, x, y, TILE_SIZE, TILE_SIZE);
+      return;
+    }
 
     // Rock base
     ctx.fillStyle = '#475569';
@@ -259,6 +302,11 @@ export class GameRenderer {
   // 3. WOODEN CRATE (Destructible)
   private drawWoodenCrate(x: number, y: number) {
     const ctx = this.ctx;
+    const crateSprite = getAssetImage('./sprites/caja.png') || getAssetImage('./caja.png');
+    if (crateSprite && crateSprite.complete && crateSprite.naturalWidth > 0) {
+      ctx.drawImage(crateSprite, x, y, TILE_SIZE, TILE_SIZE);
+      return;
+    }
 
     // Drop shadow
     ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
