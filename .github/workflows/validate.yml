@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: validate-${{ github.event.pull_request.head.ref || github.ref }}
+  group: validate-${{ github.event.pull_request.head.ref || github.head_ref || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
