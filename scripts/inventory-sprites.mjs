@@ -17,7 +17,7 @@ function parsePng(buffer) {
   }
 
   let width = 0, height = 0, bitDepth = 0, colorType = 0, interlace = 0;
-  let palette = null, transparencyChunk = null;
+  let transparencyChunk = null;
   const imageData = [];
   let offset = 8;
   while (offset + 12 <= buffer.length) {
@@ -29,8 +29,7 @@ function parsePng(buffer) {
     if (type === 'IHDR') {
       width = data.readUInt32BE(0); height = data.readUInt32BE(4);
       bitDepth = data[8]; colorType = data[9]; interlace = data[12];
-    } else if (type === 'PLTE') palette = Buffer.from(data);
-    else if (type === 'tRNS') transparencyChunk = Buffer.from(data);
+    } else if (type === 'tRNS') transparencyChunk = Buffer.from(data);
     else if (type === 'IDAT') imageData.push(data);
     offset = dataEnd + 4;
     if (type === 'IEND') break;
@@ -51,11 +50,9 @@ function parsePng(buffer) {
     const bitsPerPixel = channels * bitDepth;
     const rowBytes = Math.ceil(width * bitsPerPixel / 8);
     const bytesPerPixel = Math.max(1, Math.ceil(bitsPerPixel / 8));
-    const scanlines = Buffer.alloc((rowBytes + 1) * height);
     let srcOffset = 0;
     let prev = Buffer.alloc(rowBytes);
     let transparentCount = 0, semiCount = 0;
-    const maxSample = bitDepth === 16 ? 65535 : (1 << bitDepth) - 1;
 
     for (let y = 0; y < height; y++) {
       const filter = packed[srcOffset++];
