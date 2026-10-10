@@ -1027,3 +1027,13 @@ Se actualizó src/audio/soundManager.ts para invalidar promesas de reproducción
 
 VALIDACIÓN
 El workflow .github/workflows/validate.yml ejecuta TypeScript, comprobación aleatoria del mapa, build de producción y un inventario PNG con dimensiones/transparencia en el resumen de GitHub Actions. No fusionar hasta que la ejecución correspondiente al último commit termine correctamente.
+
+============================================================
+ACTUALIZACIÓN DE PAUSA Y ENEMIGOS — 10 OCTUBRE 2026
+============================================================
+
+PAUSA Y POWER-UP DE VELOCIDAD
+El power-up de velocidad ya no usa setTimeout del navegador. Su duración se guarda en PlayerState.speedBoostTimer y se reduce desde el update del motor. Como el motor no se actualiza mientras status no es playing, la duración del power-up también queda pausada en el menú de pausa.
+
+COLISIÓN ENTRE ZORROS
+El movimiento de enemigos ahora reserva la celda actual y la celda objetivo de los otros zorros vivos. No se eligen destinos ocupados ni se permite intercambiar posiciones cara a cara, reduciendo solapamientos entre enemigos. La lógica sigue dentro de GameEngine, separada del renderizado.
