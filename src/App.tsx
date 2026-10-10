@@ -29,7 +29,6 @@ export default function App() {
   const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
   const [showContact, setShowContact] = useState<boolean>(false);
   const [showTop50, setShowTop50] = useState<boolean>(false);
-  const [showCharSelect, setShowCharSelect] = useState<boolean>(false);
   const [showMultiplayerLobby, setShowMultiplayerLobby] = useState<boolean>(false);
 
   // Canvas & Game Engine references
@@ -78,26 +77,26 @@ export default function App() {
     setStatus('name_input');
   };
 
-  // Launch Game after name confirmed
+  // Step 2: save the player's name and continue to character selection.
   const handleLaunchGame = useCallback((name: string) => {
     setPlayerName(name);
     localStorage.setItem('cbr_player_name', name);
     soundManager.playClick();
+    setStatus('character_select');
+  }, []);
+
+  // Step 3: only after confirming a playable character do we start the game.
+  const handleConfirmCharacter = useCallback((character: CharacterConfig) => {
+    setSelectedCharacter(character);
+    soundManager.playClick();
     soundManager.playMusic('game');
-
-    trackAnalytics('game_start', mode);
-
+    trackAnalytics('game_start', 'single');
     const engine = engineRef.current;
-    engine.initGame({
-      mode,
-      player1Name: name,
-      player1Char: selectedCharacter.id,
-    });
-
+    engine.initGame({ mode: 'single', player1Name: playerName, player1Char: character.id });
     setPlayerMirror({ ...engine.players[0] });
     setTimeRemainingMirror(engine.timeRemaining);
     setStatus('playing');
-  }, [mode, selectedCharacter]);
+  }, [playerName]);
 
   // Launch Multiplayer Match
   const handleLaunchMultiplayer = useCallback((config: {
@@ -414,13 +413,11 @@ export default function App() {
           <div className="absolute inset-0 z-30">
             <StartScreen
               volumeLevel={volumeLevel}
-              selectedCharacter={selectedCharacter}
               onCycleVolume={handleCycleVolume}
               onOpenContact={() => setShowContact(true)}
               onStartSinglePlayer={handleStartSinglePlayerPrompt}
               onOpenMultiplayer={() => setShowMultiplayerLobby(true)}
               onOpenRanking={() => setShowTop50(true)}
-              onOpenCharacterSelect={() => setShowCharSelect(true)}
               onOpenAdmin={() => setStatus('admin')}
             />
           </div>
@@ -433,21 +430,17 @@ export default function App() {
         {status === 'name_input' && (
           <NameInputModal
             initialName={playerName}
-            selectedCharacter={selectedCharacter}
             onConfirm={handleLaunchGame}
             onCancel={() => setStatus('menu')}
           />
         )}
 
-        {/* 2. Character Selection Modal */}
-        {showCharSelect && (
+        {/* 2. Character selection happens after name entry and before game initialization. */}
+        {status === 'character_select' && (
           <CharacterSelectModal
             selectedId={selectedCharacter.id}
-            onSelect={(char) => {
-              setSelectedCharacter(char);
-              setShowCharSelect(false);
-            }}
-            onClose={() => setShowCharSelect(false)}
+            onSelect={handleConfirmCharacter}
+            onClose={() => setStatus('name_input')}
           />
         )}
 
