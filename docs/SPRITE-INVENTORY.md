@@ -30,3 +30,7 @@ Inventory of the existing files in `public/sprites/`. Names and file presence ar
 - Keep collision, damage, map logic, bombs, scoring and rescue rules in the game engine.
 - If a required sprite is missing, report the exact path instead of inventing replacement art.
 - Keep source images unchanged; use crop coordinates as metadata.
+
+## Visual inspection tool
+
+A browser-based inspector is available in the app at `?sprite-debug=1`. It displays all original PNGs, reports natural dimensions, overlays an adjustable rows/columns grid and allows copying the proposed grid report. The grid overlay is for inspection only and does not alter the source files or automatically certify frame boundaries.
