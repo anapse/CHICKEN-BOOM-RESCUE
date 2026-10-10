@@ -2,6 +2,7 @@ import React from 'react';
 import { Mail, Play, Trophy, Users, Volume, Volume1, Volume2, VolumeX, Shield, Zap, Sparkles } from 'lucide-react';
 import { SoundVolumeLevel } from '../audio/soundManager';
 import { spriteManager } from '../game/SpriteManager';
+import { SPRITE_ASSETS } from '../game/spriteAssets';
 
 interface StartScreenProps {
   volumeLevel: SoundVolumeLevel;
@@ -27,8 +28,8 @@ export const StartScreen: React.FC<StartScreenProps> = ({
 
   React.useEffect(() => {
     // Reuse the centralized asset cache for menu art.
-    void spriteManager.load('./sprites/fondomenu.png').then((image) => setHasMenuBg(Boolean(image)));
-    void spriteManager.load('./sprites/logo.png').then((image) => setHasLogoImg(Boolean(image)));
+    void spriteManager.load(SPRITE_ASSETS.menuBackground.src).then((image) => setHasMenuBg(Boolean(image)));
+    void spriteManager.load(SPRITE_ASSETS.logo.src).then((image) => setHasLogoImg(Boolean(image)));
   }, []);
 
   return (
@@ -64,7 +65,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
       <div className="flex flex-col items-center justify-center my-auto z-10 text-center max-w-xs">
         {hasLogoImg ? (
           <img
-            src="./sprites/logo.png"
+            src={SPRITE_ASSETS.logo.src}
             alt="Chicken Boom Rescue"
             className="w-full max-w-[280px] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
           />
