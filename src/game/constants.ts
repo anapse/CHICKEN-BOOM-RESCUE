@@ -1,6 +1,6 @@
 import { CharacterConfig } from './types';
 
-export const TILE_SIZE = 48;
+export const TILE_SIZE = 96; // Double every map cell and render each tile sprite at 200% scale.
 export const SCREEN_COLS = 11;
 export const TOTAL_SCREENS = 3;
 export const GRID_COLS = SCREEN_COLS * TOTAL_SCREENS; // 33 columns
