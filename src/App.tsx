@@ -11,6 +11,7 @@ import { MultiplayerLobbyModal } from './components/MultiplayerLobbyModal';
 import { NameInputModal } from './components/NameInputModal';
 import { PauseModal } from './components/PauseModal';
 import { StartScreen } from './components/StartScreen';
+import { SpriteAtlasInspector } from './components/SpriteAtlasInspector';
 import { Top50Modal } from './components/Top50Modal';
 import { VictoryModal } from './components/VictoryModal';
 import { CHARACTERS, GRID_COLS, GRID_ROWS, TILE_SIZE } from './game/constants';
@@ -50,6 +51,8 @@ export default function App() {
       const hash = window.location.hash;
       if (path === '/admin' || hash === '#/admin') {
         setStatus('admin');
+      } else if (new URLSearchParams(window.location.search).get('sprite-debug') === '1') {
+        setStatus('sprite_debug');
       }
     }
   }, []);
@@ -367,6 +370,10 @@ export default function App() {
         }}
       />
     );
+  }
+
+  if (status === 'sprite_debug') {
+    return <SpriteAtlasInspector onClose={() => setStatus('menu')} />;
   }
 
   const viewportW = 11 * TILE_SIZE; // 528px
