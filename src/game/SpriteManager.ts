@@ -64,6 +64,7 @@ export class SpriteManager {
       image.onerror = () => {
         entry.status = 'error';
         entry.error = `No se pudo cargar el recurso: ${normalized}`;
+        console.warn('[SpriteManager]', entry.error);
         resolve(null);
       };
       image.src = normalized;
@@ -102,6 +103,23 @@ export class SpriteManager {
     return [...this.entries.values()]
       .filter((entry) => entry.status === 'error' && entry.error)
       .map((entry) => entry.error as string);
+  }
+
+  /** Snapshot useful for diagnostics/admin screens without exposing mutable cache entries. */
+  public getDiagnostics(): Array<{
+    src: string;
+    status: SpriteLoadStatus;
+    width: number;
+    height: number;
+    error?: string;
+  }> {
+    return [...this.entries.entries()].map(([src, entry]) => ({
+      src,
+      status: entry.status,
+      width: entry.status === 'loaded' ? entry.image.naturalWidth : 0,
+      height: entry.status === 'loaded' ? entry.image.naturalHeight : 0,
+      ...(entry.error ? { error: entry.error } : {}),
+    }));
   }
 
   /** Draw a full image or one explicitly configured frame from a sprite sheet. */
