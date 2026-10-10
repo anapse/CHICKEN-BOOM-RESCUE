@@ -821,292 +821,72 @@ export class GameRenderer {
   // 9. FOX ENEMIES (Anthropomorphic cartoon foxes)
   private renderEnemies(enemies: EnemyState[]) {
     const ctx = this.ctx;
+    const foxPath = './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_43.png';
+    const foxSheet = getAssetImage(SPRITE_ASSETS.foxEnemy.src);
+    const foxIllustration = getAssetImage(foxPath);
 
     enemies.forEach((enemy) => {
-      const ex = enemy.x * TILE_SIZE + 24;
-      const ey = enemy.y * TILE_SIZE + 26;
-
+      const x = enemy.x * TILE_SIZE;
+      const y = enemy.y * TILE_SIZE;
+      const fade = enemy.isDead ? Math.max(0, 1 - enemy.deathTimer / 0.6) : 1;
       ctx.save();
-      ctx.translate(ex, ey);
-
+      ctx.globalAlpha *= fade;
       if (enemy.isDead) {
-        // Death spin & poof
-        const fade = Math.max(0, 1 - enemy.deathTimer / 0.6);
+        ctx.translate(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
         ctx.rotate(enemy.deathTimer * 12);
-        ctx.scale(fade, fade);
-        ctx.globalAlpha = fade;
+        ctx.translate(-(x + TILE_SIZE / 2), -(y + TILE_SIZE / 2));
       }
 
-      // Shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-      ctx.beginPath();
-      ctx.ellipse(0, 14, 13, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Fluffy Fox Tail (waving)
-      const tailWiggle = Math.sin(this.animTimer * 8) * 4;
-      ctx.fillStyle = '#ea580c';
-      ctx.beginPath();
-      ctx.ellipse(-12 + tailWiggle, 4, 8, 14, -0.6, 0, Math.PI * 2);
-      ctx.fill();
-      // White tail tip
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.ellipse(-16 + tailWiggle, -2, 4, 6, -0.6, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Bipedal Legs & little black boots
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(-7, 10, 5, 6);
-      ctx.fillRect(2, 10, 5, 6);
-
-      // Body (Orange with white chest fur)
-      ctx.fillStyle = '#ea580c';
-      ctx.beginPath();
-      ctx.ellipse(0, 4, 11, 13, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // White chest
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.ellipse(0, 4, 6, 8, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Fox Head
-      ctx.fillStyle = '#ea580c';
-      ctx.beginPath();
-      ctx.ellipse(0, -7, 12, 11, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Pointy Ears
-      // Left ear
-      ctx.fillStyle = '#ea580c';
-      ctx.beginPath();
-      ctx.moveTo(-11, -12);
-      ctx.lineTo(-8, -23);
-      ctx.lineTo(-2, -15);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#1e293b'; // dark ear tip
-      ctx.beginPath();
-      ctx.moveTo(-9, -17);
-      ctx.lineTo(-8, -23);
-      ctx.lineTo(-5, -19);
-      ctx.closePath();
-      ctx.fill();
-
-      // Right ear
-      ctx.fillStyle = '#ea580c';
-      ctx.beginPath();
-      ctx.moveTo(11, -12);
-      ctx.lineTo(8, -23);
-      ctx.lineTo(2, -15);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#1e293b';
-      ctx.beginPath();
-      ctx.moveTo(9, -17);
-      ctx.lineTo(8, -23);
-      ctx.lineTo(5, -19);
-      ctx.closePath();
-      ctx.fill();
-
-      // White Muzzle / cheeks
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.moveTo(-9, -5);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(9, -5);
-      ctx.lineTo(0, -1);
-      ctx.closePath();
-      ctx.fill();
-
-      // Black cute nose
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.ellipse(0, -2, 2.5, 2, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Cheeky sly eyes
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.ellipse(-5, -8, 2, 3, 0.15, 0, Math.PI * 2);
-      ctx.ellipse(5, -8, 2, 3, -0.15, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(-6, -9, 1, 1);
-      ctx.fillRect(4, -9, 1, 1);
-
+      // Prefer the existing large fox artwork; use the sprite sheet only if no
+      // standalone illustration is available. Do not draw a procedural SVG-like fox.
+      const fox = foxIllustration ?? foxSheet;
+      if (fox && fox.complete && fox.naturalWidth > 0) {
+        const size = TILE_SIZE * 1.75;
+        ctx.drawImage(fox, x + (TILE_SIZE - size) / 2, y + TILE_SIZE - size, size, size);
+      }
       ctx.restore();
     });
   }
 
-  // 10. PLAYER CHARACTERS (POLLITO RAMBO / POLLITA / EXPLORADORA)
   private renderPlayer(player: PlayerState) {
     const ctx = this.ctx;
-    const px = player.x * TILE_SIZE + 24;
-    const py = player.y * TILE_SIZE + 26;
+    const x = player.x * TILE_SIZE;
+    const y = player.y * TILE_SIZE;
+    const characterImages: Record<string, string> = {
+      rambo_macho: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_11.png',
+      rambo_hembra: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_04.png',
+      exploradora: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_56.png',
+    };
+    const image = getAssetImage(characterImages[player.characterId] ?? characterImages.rambo_macho);
+    const characterSheet = player.characterId === 'rambo_hembra'
+      ? getAssetImage(SPRITE_ASSETS.pollitaRambo.src)
+      : player.characterId === 'exploradora'
+        ? getAssetImage(SPRITE_ASSETS.gallinitaExploradora.src)
+        : getAssetImage(SPRITE_ASSETS.pollitoRambo.src);
+    const sprite = characterSheet ?? image;
 
     ctx.save();
-    ctx.translate(px, py);
-
-    // Invulnerability flash
-    if (player.invulnerableTimer > 0) {
-      const flash = Math.floor(this.animTimer * 20) % 2 === 0;
-      if (flash) ctx.globalAlpha = 0.4;
+    if (player.invulnerableTimer > 0 && Math.floor(this.animTimer * 20) % 2 === 0) {
+      ctx.globalAlpha = 0.4;
     }
+    if (player.isGhost) ctx.globalAlpha *= 0.45;
 
-    // Ghost transparency
-    if (player.isGhost) {
-      ctx.globalAlpha = 0.45;
-      // Ghostly purple-cyan aura
-      ctx.fillStyle = 'rgba(168, 85, 247, 0.4)';
-      ctx.beginPath();
-      ctx.arc(0, 0, 24, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // Shield Aura
+    // Shield/ghost effects remain simple gameplay indicators; the character itself
+    // always comes from the provided PNG artwork/sprite sheet.
     if (player.hasShield) {
-      const shieldPulse = Math.sin(this.animTimer * 8) * 3;
-      ctx.fillStyle = 'rgba(59, 130, 246, 0.35)';
-      ctx.beginPath();
-      ctx.arc(0, 0, 22 + shieldPulse, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#60a5fa';
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
+      const shield = getAssetImage(SPRITE_ASSETS.iconSheet.src);
+      if (shield && shield.complete && shield.naturalWidth > 0) {
+        const size = TILE_SIZE * 1.9;
+        ctx.globalAlpha *= 0.8;
+        ctx.drawImage(shield, x + (TILE_SIZE - size) / 2, y + (TILE_SIZE - size) / 2, size, size);
+        ctx.globalAlpha /= 0.8;
+      }
     }
 
-    // Shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.ellipse(0, 14, 13, 5, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Little orange chick feet
-    const walkBob = player.isMoving ? Math.sin(this.animTimer * 16) * 2 : 0;
-    ctx.fillStyle = '#f97316';
-    ctx.fillRect(-8, 11 + walkBob, 6, 4);
-    ctx.fillRect(2, 11 - walkBob, 6, 4);
-
-    // Chubby White Chick Body
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.ellipse(0, 2, 13, 14, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Little wings
-    ctx.fillStyle = '#f8fafc';
-    ctx.beginPath();
-    ctx.ellipse(-12, 3, 4, 7, 0.3, 0, Math.PI * 2);
-    ctx.ellipse(12, 3, 4, 7, -0.3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Character Accessories:
-    if (player.characterId === 'rambo_macho') {
-      // 1. Macho Rambo: Military ammo bandolier belt
-      ctx.fillStyle = '#78350f';
-      ctx.beginPath();
-      ctx.moveTo(-11, -4);
-      ctx.lineTo(9, 10);
-      ctx.lineTo(12, 8);
-      ctx.lineTo(-8, -6);
-      ctx.closePath();
-      ctx.fill();
-      // Ammo cartridges
-      ctx.fillStyle = '#facc15';
-      ctx.fillRect(-3, 0, 3, 5);
-      ctx.fillRect(2, 4, 3, 5);
-
-      // RED RAMBO BANDANA around forehead
-      ctx.fillStyle = '#dc2626';
-      ctx.beginPath();
-      ctx.roundRect(-12, -10, 24, 6, 2);
-      ctx.fill();
-      // Bandana tails fluttering behind
-      const bandWave = Math.sin(this.animTimer * 10) * 3;
-      ctx.beginPath();
-      ctx.moveTo(-11, -8);
-      ctx.lineTo(-20 + bandWave, -12);
-      ctx.lineTo(-18 + bandWave, -4);
-      ctx.closePath();
-      ctx.fill();
-    } else if (player.characterId === 'rambo_hembra') {
-      // 2. Pollita Comando: Pink/Magenta bandana & tactical collar
-      ctx.fillStyle = '#ec4899';
-      ctx.beginPath();
-      ctx.roundRect(-12, -10, 24, 6, 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(-11, -8);
-      ctx.lineTo(-19, -11);
-      ctx.lineTo(-17, -4);
-      ctx.closePath();
-      ctx.fill();
-    } else {
-      // 3. Gallinita Exploradora: Safari hat & Glasses
-      ctx.fillStyle = '#b45309';
-      // Hat brim
-      ctx.beginPath();
-      ctx.ellipse(0, -10, 16, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-      // Hat dome
-      ctx.beginPath();
-      ctx.arc(0, -12, 9, Math.PI, 0);
-      ctx.fill();
-
-      // Glasses
-      ctx.strokeStyle = '#475569';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(-9, -4, 7, 6);
-      ctx.strokeRect(2, -4, 7, 6);
-      ctx.beginPath();
-      ctx.moveTo(-2, -1);
-      ctx.lineTo(2, -1);
-      ctx.stroke();
+    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
+      const size = TILE_SIZE * 1.75;
+      ctx.drawImage(sprite, x + (TILE_SIZE - size) / 2, y + TILE_SIZE - size, size, size);
     }
-
-    // Yellow Beak
-    ctx.fillStyle = '#facc15';
-    ctx.beginPath();
-    ctx.moveTo(-4, 0);
-    ctx.lineTo(4, 0);
-    ctx.lineTo(0, 5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#ca8a04';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
-    // Expressive Eyes with determined eyebrows
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.arc(-5, -3, 2.5, 0, Math.PI * 2);
-    ctx.arc(5, -3, 2.5, 0, Math.PI * 2);
-    ctx.fill();
-    // Eye shine
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(-6, -4, 1.2, 1.2);
-    ctx.fillRect(4, -4, 1.2, 1.2);
-
-    // Red chicken comb atop head
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.arc(0, -13, 3.5, 0, Math.PI * 2);
-    ctx.arc(4, -12, 3, 0, Math.PI * 2);
-    ctx.arc(-4, -12, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Red beard wattle under beak
-    ctx.fillStyle = '#ef4444';
-    ctx.beginPath();
-    ctx.arc(0, 6, 2, 0, Math.PI * 2);
-    ctx.fill();
-
     ctx.restore();
   }
 
