@@ -48,3 +48,11 @@ Code currently draws fallback shapes for the player, fox, rescued animals, cage,
 - `public/sonidos/musica_juego.mp3` — requested gameplay music file is not present in the public tree.
 
 `src/audio/soundManager.ts` attempts to load those two files and falls back to synthesized Web Audio music if loading fails. This is existing behavior; the master prompt's no-substitute rule needs a decision before replacing/removing that fallback. No audio files were fabricated.
+
+## Map and audio fixes added in this branch
+
+- Objective approach cells are cleared and a route is carved by removing only indestructible rocks from the route; destructible crates remain in place.
+- The key is guaranteed to be in a crate.
+- Multiplayer maps no longer spawn the three single-player rescue animals without their cage.
+- `scripts/check-map-generation.ts` checks 200 random maps per mode. CI runs this check before production build.
+- `src/audio/soundManager.ts` invalidates stale audio promises to prevent an old music request from starting a second track after the user changes/stops music.
