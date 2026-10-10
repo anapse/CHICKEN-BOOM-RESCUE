@@ -95,6 +95,8 @@ export class GameEngine {
       coins: 0,
       hasKey: false,
       speedMultiplier: 1.0,
+
+      speedBoostTimer: 0,
       isGhost: false,
       ghostTimer: 0,
       hasShield: false,
@@ -127,6 +129,8 @@ export class GameEngine {
         coins: 0,
         hasKey: false,
         speedMultiplier: 1.0,
+
+        speedBoostTimer: 0,
         isGhost: false,
         ghostTimer: 0,
         hasShield: false,
@@ -344,6 +348,15 @@ export class GameEngine {
       // Timers: Invulnerability, Shield, Ghost
       if (player.invulnerableTimer > 0) {
         player.invulnerableTimer -= deltaTime;
+      }
+
+      // The boost uses simulation time, so pausing the game also pauses its duration.
+      if (player.speedBoostTimer > 0) {
+        player.speedBoostTimer -= deltaTime;
+        if (player.speedBoostTimer <= 0) {
+          player.speedBoostTimer = 0;
+          player.speedMultiplier = 1.0;
+        }
       }
 
       if (player.hasShield) {
@@ -663,9 +676,7 @@ export class GameEngine {
 
       case 'POWERUP_SPEED':
         player.speedMultiplier = 1.35;
-        setTimeout(() => {
-          player.speedMultiplier = 1.0;
-        }, SPEED_BOOST_DURATION * 1000);
+        player.speedBoostTimer = SPEED_BOOST_DURATION;
         player.score += 150;
         soundManager.playCollectPowerUp();
         this.addFloatingText('¡VELOCIDAD!', player.gridX, player.gridY, '#3b82f6');
