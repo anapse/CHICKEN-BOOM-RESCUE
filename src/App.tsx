@@ -11,6 +11,7 @@ import { MultiplayerLobbyModal } from './components/MultiplayerLobbyModal';
 import { NameInputModal } from './components/NameInputModal';
 import { PauseModal } from './components/PauseModal';
 import { StartScreen } from './components/StartScreen';
+import { SpriteAtlasInspector } from './components/SpriteAtlasInspector';
 import { Top50Modal } from './components/Top50Modal';
 import { VictoryModal } from './components/VictoryModal';
 import { CHARACTERS, GRID_COLS, GRID_ROWS, TILE_SIZE } from './game/constants';
@@ -29,7 +30,6 @@ export default function App() {
   const [showHowToPlay, setShowHowToPlay] = useState<boolean>(false);
   const [showContact, setShowContact] = useState<boolean>(false);
   const [showTop50, setShowTop50] = useState<boolean>(false);
-  const [showCharSelect, setShowCharSelect] = useState<boolean>(false);
   const [showMultiplayerLobby, setShowMultiplayerLobby] = useState<boolean>(false);
 
   // Canvas & Game Engine references
@@ -38,6 +38,7 @@ export default function App() {
   const rendererRef = useRef<GameRenderer | null>(null);
   const requestRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  const endHandledRef = useRef<boolean>(false);
 
   // Active player state mirror for reactive React HUD
   const [playerMirror, setPlayerMirror] = useState<PlayerState | null>(null);
@@ -50,6 +51,8 @@ export default function App() {
       const hash = window.location.hash;
       if (path === '/admin' || hash === '#/admin') {
         setStatus('admin');
+      } else if (new URLSearchParams(window.location.search).get('sprite-debug') === '1') {
+        setStatus('sprite_debug');
       }
     }
   }, []);
@@ -78,26 +81,28 @@ export default function App() {
     setStatus('name_input');
   };
 
-  // Launch Game after name confirmed
+  // Step 2: save the player's name and continue to character selection.
   const handleLaunchGame = useCallback((name: string) => {
+    endHandledRef.current = false;
     setPlayerName(name);
     localStorage.setItem('cbr_player_name', name);
     soundManager.playClick();
+    setStatus('character_select');
+  }, []);
+
+  // Step 3: only after confirming a playable character do we start the game.
+  const handleConfirmCharacter = useCallback((character: CharacterConfig) => {
+    endHandledRef.current = false;
+    setSelectedCharacter(character);
+    soundManager.playClick();
     soundManager.playMusic('game');
-
-    trackAnalytics('game_start', mode);
-
+    trackAnalytics('game_start', 'single');
     const engine = engineRef.current;
-    engine.initGame({
-      mode,
-      player1Name: name,
-      player1Char: selectedCharacter.id,
-    });
-
+    engine.initGame({ mode: 'single', player1Name: playerName, player1Char: character.id });
     setPlayerMirror({ ...engine.players[0] });
     setTimeRemainingMirror(engine.timeRemaining);
     setStatus('playing');
-  }, [mode, selectedCharacter]);
+  }, [playerName]);
 
   // Launch Multiplayer Match
   const handleLaunchMultiplayer = useCallback((config: {
@@ -106,6 +111,7 @@ export default function App() {
     player2Name: string;
     player2Char: 'rambo_macho' | 'rambo_hembra' | 'exploradora';
   }) => {
+    endHandledRef.current = false;
     soundManager.playClick();
     soundManager.playMusic('game');
     setMode('multiplayer');
@@ -145,10 +151,17 @@ export default function App() {
     soundManager.playClick();
     soundManager.playMusic('game');
     const engine = engineRef.current;
+    const previousPlayers = engine.players;
+    const previousPlayer1 = previousPlayers[0];
+    const previousPlayer2 = previousPlayers[1];
+    endHandledRef.current = false;
     engine.initGame({
       mode,
-      player1Name: playerName,
-      player1Char: selectedCharacter.id,
+      player1Name: previousPlayer1?.name || playerName,
+      player1Char: previousPlayer1?.characterId || selectedCharacter.id,
+      ...(mode === 'multiplayer' && previousPlayer2
+        ? { player2Name: previousPlayer2.name, player2Char: previousPlayer2.characterId }
+        : {}),
     });
     setPlayerMirror({ ...engine.players[0] });
     setTimeRemainingMirror(engine.timeRemaining);
@@ -158,18 +171,20 @@ export default function App() {
   // Victory Handler
   const handleVictory = useCallback(async () => {
     const engine = engineRef.current;
-    const p1 = engine.players[0];
+    const winner = engine.players.find((player) => player.id === engine.winnerPlayerId) ?? engine.players[0];
     const timeBonus = Math.floor(engine.timeRemaining * 10);
-    const finalScore = p1 ? p1.score + timeBonus : 0;
+    const finalScore = winner ? winner.score + timeBonus : 0;
 
+    if (winner) setPlayerMirror({ ...winner });
+    setTimeRemainingMirror(engine.timeRemaining);
     trackAnalytics('game_victory', mode);
 
-    if (p1) {
+    if (winner) {
       await saveRankingScore({
-        playerName: p1.name,
+        playerName: winner.name,
         score: finalScore,
         level: currentLevel,
-        rescued: true,
+        rescued: mode === 'single',
       });
     }
 
@@ -181,6 +196,8 @@ export default function App() {
     const engine = engineRef.current;
     const p1 = engine.players[0];
 
+    if (p1) setPlayerMirror({ ...p1 });
+    setTimeRemainingMirror(engine.timeRemaining);
     trackAnalytics('game_over', mode);
 
     if (p1 && p1.score > 0) {
@@ -226,16 +243,20 @@ export default function App() {
         engine.update(deltaTime, viewportW);
 
         // Update mirrors for React HUD
-        if (engine.players[0]) {
+        // Freeze the displayed player snapshot when an ending is triggered.
+        // The victory handler will select the actual winner (including player 2).
+        if (!engine.isVictory && !engine.isGameOver && engine.players[0]) {
           setPlayerMirror({ ...engine.players[0] });
+          setTimeRemainingMirror(engine.timeRemaining);
         }
-        setTimeRemainingMirror(engine.timeRemaining);
 
         // Check victory or game over conditions
-        if (engine.isVictory && status === 'playing') {
-          handleVictory();
-        } else if (engine.isGameOver && status === 'playing') {
-          handleGameOver();
+        if (engine.isVictory && status === 'playing' && !endHandledRef.current) {
+          endHandledRef.current = true;
+          void handleVictory();
+        } else if (engine.isGameOver && status === 'playing' && !endHandledRef.current) {
+          endHandledRef.current = true;
+          void handleGameOver();
         }
       }
 
@@ -357,6 +378,10 @@ export default function App() {
     );
   }
 
+  if (status === 'sprite_debug') {
+    return <SpriteAtlasInspector onClose={() => setStatus('menu')} />;
+  }
+
   const viewportW = 11 * TILE_SIZE; // 528px
   const viewportH = 17 * TILE_SIZE; // 816px
 
@@ -414,13 +439,11 @@ export default function App() {
           <div className="absolute inset-0 z-30">
             <StartScreen
               volumeLevel={volumeLevel}
-              selectedCharacter={selectedCharacter}
               onCycleVolume={handleCycleVolume}
               onOpenContact={() => setShowContact(true)}
               onStartSinglePlayer={handleStartSinglePlayerPrompt}
               onOpenMultiplayer={() => setShowMultiplayerLobby(true)}
               onOpenRanking={() => setShowTop50(true)}
-              onOpenCharacterSelect={() => setShowCharSelect(true)}
               onOpenAdmin={() => setStatus('admin')}
             />
           </div>
@@ -433,21 +456,17 @@ export default function App() {
         {status === 'name_input' && (
           <NameInputModal
             initialName={playerName}
-            selectedCharacter={selectedCharacter}
             onConfirm={handleLaunchGame}
             onCancel={() => setStatus('menu')}
           />
         )}
 
-        {/* 2. Character Selection Modal */}
-        {showCharSelect && (
+        {/* 2. Character selection happens after name entry and before game initialization. */}
+        {status === 'character_select' && (
           <CharacterSelectModal
             selectedId={selectedCharacter.id}
-            onSelect={(char) => {
-              setSelectedCharacter(char);
-              setShowCharSelect(false);
-            }}
-            onClose={() => setShowCharSelect(false)}
+            onSelect={handleConfirmCharacter}
+            onClose={() => setStatus('name_input')}
           />
         )}
 

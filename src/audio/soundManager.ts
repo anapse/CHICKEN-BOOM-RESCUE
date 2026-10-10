@@ -17,6 +17,7 @@ class SoundManager {
   private currentTrack: 'none' | 'menu' | 'game' = 'none';
   private musicInterval: any = null;
   private currentAudioElement: HTMLAudioElement | null = null;
+  private musicRequestId = 0;
   private isInitialized = false;
 
   constructor() {
@@ -107,27 +108,35 @@ class SoundManager {
     if (this.currentTrack === track) return;
     this.stopMusic();
     this.currentTrack = track;
+    const requestId = ++this.musicRequestId;
 
-    // Check if MP3 file exists in public/sonidos/
+    // These optional files are not currently present in public/sonidos/.
+    // If loading fails, keep the existing Web Audio fallback, but never start
+    // a stale fallback after the user has already changed tracks or stopped music.
     const filePath = track === 'menu' ? './sonidos/musica_menu.mp3' : './sonidos/musica_juego.mp3';
     const audio = new Audio(filePath);
     audio.loop = true;
     audio.volume = Math.max(0, Math.min(1, (this.volumeLevel / 100) * 0.5));
-    
+    this.currentAudioElement = audio;
+
     audio.play().then(() => {
-      this.currentAudioElement = audio;
-    }).catch(() => {
-      // Fallback to Web Audio API synthesis
-      if (!this.ctx || !this.musicGain) return;
-      if (track === 'menu') {
-        this.startMenuMusic();
-      } else {
-        this.startGameMusic();
+      if (requestId !== this.musicRequestId || this.currentTrack !== track) {
+        audio.pause();
+        if (this.currentAudioElement === audio) this.currentAudioElement = null;
+        return;
       }
+    }).catch(() => {
+      if (this.currentAudioElement === audio) this.currentAudioElement = null;
+      if (requestId !== this.musicRequestId || this.currentTrack !== track) return;
+      if (!this.ctx || !this.musicGain) return;
+      if (track === 'menu') this.startMenuMusic();
+      else this.startGameMusic();
     });
   }
 
   public stopMusic() {
+    // Invalidate any pending audio.play() promise before stopping the current track.
+    this.musicRequestId++;
     if (this.currentAudioElement) {
       this.currentAudioElement.pause();
       this.currentAudioElement = null;

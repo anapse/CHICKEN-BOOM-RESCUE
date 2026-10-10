@@ -12,6 +12,47 @@ export interface GeneratedMap {
   chestLocation: { x: number; y: number };
 }
 
+/** Clear only indestructible rocks along a deterministic route. Crates remain
+ * destructible, so this guarantees a route without bypassing the crate mechanic. */
+function carveRockCorridor(
+  grid: CellType[][],
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+) {
+  let x = from.x;
+  let y = from.y;
+  const clearRock = (cx: number, cy: number) => {
+    if (grid[cy]?.[cx] === 'ROCK_WALL') grid[cy][cx] = 'EMPTY';
+  };
+
+  while (x !== to.x) {
+    x += Math.sign(to.x - x);
+    clearRock(x, y);
+  }
+  while (y !== to.y) {
+    y += Math.sign(to.y - y);
+    clearRock(x, y);
+  }
+}
+
+function clearObjectiveApproach(
+  grid: CellType[][],
+  safeCells: Set<string>,
+  objective: { x: number; y: number },
+) {
+  const neighbors = [
+    { x: objective.x - 1, y: objective.y },
+    { x: objective.x + 1, y: objective.y },
+    { x: objective.x, y: objective.y - 1 },
+    { x: objective.x, y: objective.y + 1 },
+  ];
+  for (const cell of neighbors) {
+    if (cell.x <= 0 || cell.x >= GRID_COLS - 1 || cell.y <= 0 || cell.y >= GRID_ROWS - 1) continue;
+    grid[cell.y][cell.x] = 'EMPTY';
+    safeCells.add(`${cell.x},${cell.y}`);
+  }
+}
+
 export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): GeneratedMap {
   // Initialize grid with EMPTY
   const grid: CellType[][] = [];
@@ -74,17 +115,10 @@ export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): Gene
 
   if (mode === 'single') {
     grid[cageLocation.y][cageLocation.x] = 'CAGE';
-    // Keep space around the cage accessible
-    safeCells.add(`${cageLocation.x - 1},${cageLocation.y}`);
-    safeCells.add(`${cageLocation.x + 1},${cageLocation.y}`);
-    safeCells.add(`${cageLocation.x},${cageLocation.y - 1}`);
-    safeCells.add(`${cageLocation.x},${cageLocation.y + 1}`);
+    clearObjectiveApproach(grid, safeCells, cageLocation);
   } else {
     grid[chestLocation.y][chestLocation.x] = 'CHEST';
-    safeCells.add(`${chestLocation.x - 1},${chestLocation.y}`);
-    safeCells.add(`${chestLocation.x + 1},${chestLocation.y}`);
-    safeCells.add(`${chestLocation.x},${chestLocation.y - 1}`);
-    safeCells.add(`${chestLocation.x},${chestLocation.y + 1}`);
+    clearObjectiveApproach(grid, safeCells, chestLocation);
   }
 
   // 3. Wooden Crates (Destructible obstacles)
@@ -113,10 +147,22 @@ export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): Gene
     const chosenCrate = midOrDeepCrates.length > 0
       ? midOrDeepCrates[Math.floor(Math.random() * midOrDeepCrates.length)]
       : candidateCrateCells[Math.floor(Math.random() * candidateCrateCells.length)];
-    
+
     keyLocation = { x: chosenCrate.x, y: chosenCrate.y };
     hiddenPickups.set(`${chosenCrate.x},${chosenCrate.y}`, 'KEY');
+  } else {
+    // Defensive fallback: always place a destructible crate containing the key.
+    keyLocation = { x: 10, y: 5 };
+    grid[keyLocation.y][keyLocation.x] = 'CRATE';
+    candidateCrateCells.push(keyLocation);
+    hiddenPickups.set(`${keyLocation.x},${keyLocation.y}`, 'KEY');
   }
+
+  // Guarantee a traversable route from spawn to the key crate and then to the
+  // mode-specific objective. Crates still block until destroyed; only rocks are cleared.
+  const objective = mode === 'single' ? cageLocation : chestLocation;
+  carveRockCorridor(grid, { x: 1, y: 1 }, keyLocation);
+  carveRockCorridor(grid, keyLocation, objective);
 
   // Other pickups inside crates
   candidateCrateCells.forEach(c => {
@@ -180,12 +226,13 @@ export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): Gene
     });
   }
 
-  // 6. Trapped Animals in the Cage (Single player mode)
-  const trappedAnimals: TrappedAnimal[] = [
+  // 6. Trapped animals belong only to the single-player cage objective.
+  // Multiplayer uses the central chest/trophy and must not show a stray cage group.
+  const trappedAnimals: TrappedAnimal[] = mode === 'single' ? [
     { id: 'piglet', name: 'Chanchito Barnie', type: 'piglet', isRescued: false, x: cageLocation.x, y: cageLocation.y },
     { id: 'sheep', name: 'Ovejita Lana', type: 'sheep', isRescued: false, x: cageLocation.x + 0.3, y: cageLocation.y },
     { id: 'bunny', name: 'Conejito Saltón', type: 'bunny', isRescued: false, x: cageLocation.x - 0.3, y: cageLocation.y },
-  ];
+  ] : [];
 
   return {
     grid,

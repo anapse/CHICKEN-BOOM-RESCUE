@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
 import { User, Play, X } from 'lucide-react';
-import { CharacterConfig } from '../game/types';
 
 interface NameInputModalProps {
   initialName: string;
-  selectedCharacter: CharacterConfig;
   onConfirm: (name: string) => void;
   onCancel: () => void;
 }
 
 export const NameInputModal: React.FC<NameInputModalProps> = ({
   initialName,
-  selectedCharacter,
   onConfirm,
   onCancel,
 }) => {
@@ -44,9 +41,9 @@ export const NameInputModal: React.FC<NameInputModalProps> = ({
           <X size={24} />
         </button>
 
-        {/* Mascot Avatar Preview */}
+        {/* Character selection intentionally happens on the next screen. */}
         <div className="w-20 h-20 rounded-full bg-gradient-to-b from-amber-300 to-amber-500 border-4 border-amber-900 flex items-center justify-center text-4xl shadow-lg -mt-12 mb-3">
-          <span>{selectedCharacter.avatarEmoji}</span>
+          <User size={34} className="text-amber-900" />
         </div>
 
         <h3 className="font-['Titan_One',sans-serif] text-2xl text-amber-950 text-center tracking-wide">
@@ -79,17 +76,12 @@ export const NameInputModal: React.FC<NameInputModalProps> = ({
             </p>
           )}
 
-          <div className="bg-amber-100/80 border border-amber-300 rounded-xl p-2.5 flex items-center justify-between text-xs text-amber-900 font-bold">
-            <span>Personaje activo:</span>
-            <span className="font-black text-amber-950">{selectedCharacter.name}</span>
-          </div>
-
           <button
             type="submit"
             className="w-full py-3.5 mt-2 rounded-2xl btn-cartoon-yellow flex items-center justify-center gap-2 font-['Titan_One',sans-serif] text-xl text-amber-950 tracking-wider shadow-xl active:scale-95 transition-transform"
           >
             <Play size={22} className="fill-amber-950" />
-            <span>¡INICIAR PARTIDA!</span>
+            <span>CONTINUAR</span>
           </button>
         </form>
       </div>

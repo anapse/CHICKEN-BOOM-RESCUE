@@ -95,6 +95,8 @@ export class GameEngine {
       coins: 0,
       hasKey: false,
       speedMultiplier: 1.0,
+
+      speedBoostTimer: 0,
       isGhost: false,
       ghostTimer: 0,
       hasShield: false,
@@ -127,6 +129,8 @@ export class GameEngine {
         coins: 0,
         hasKey: false,
         speedMultiplier: 1.0,
+
+        speedBoostTimer: 0,
         isGhost: false,
         ghostTimer: 0,
         hasShield: false,
@@ -346,6 +350,15 @@ export class GameEngine {
         player.invulnerableTimer -= deltaTime;
       }
 
+      // The boost uses simulation time, so pausing the game also pauses its duration.
+      if (player.speedBoostTimer > 0) {
+        player.speedBoostTimer -= deltaTime;
+        if (player.speedBoostTimer <= 0) {
+          player.speedBoostTimer = 0;
+          player.speedMultiplier = 1.0;
+        }
+      }
+
       if (player.hasShield) {
         player.shieldTimer -= deltaTime;
         if (player.shieldTimer <= 0) {
@@ -408,7 +421,7 @@ export class GameEngine {
 
         // Destructible Crate -> DESTROY crate, but blast DOES NOT pass through
         if (cell === 'CRATE') {
-          this.destroyCrate(tx, ty);
+          this.destroyCrate(tx, ty, bomb.ownerId);
           cells.push({ gridX: tx, gridY: ty, isCenter: false, direction: dir });
           // CRITICAL RULE 20: Crate blocks propagation behind it
           break;
@@ -436,7 +449,7 @@ export class GameEngine {
     this.applyExplosionDamage(cells, bomb.ownerId);
   }
 
-  private destroyCrate(x: number, y: number) {
+  private destroyCrate(x: number, y: number, ownerId?: string) {
     this.grid[y][x] = 'EMPTY';
     soundManager.playCrateDestroy();
 
@@ -454,9 +467,10 @@ export class GameEngine {
       this.hiddenPickups.delete(coordKey);
     }
 
-    // Add points to owner
-    if (this.players[0]) {
-      this.players[0].score += 50;
+    // Reward the player whose bomb destroyed the crate (important in multiplayer).
+    const owner = this.players.find((player) => player.id === ownerId) ?? this.players[0];
+    if (owner) {
+      owner.score += 50;
       this.addFloatingText('+50', x, y, '#fde047');
     }
   }
@@ -583,8 +597,20 @@ export class GameEngine {
       if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) return false;
       const cell = this.grid[ny][nx];
       if (cell !== 'EMPTY') return false;
-      // Cannot walk into active bombs
+      // Cannot walk into active bombs.
       if (this.bombs.some((b) => b.gridX === nx && b.gridY === ny)) return false;
+
+      // Foxes reserve both their current cell and their next target cell.
+      // This prevents overlap and head-on swaps while they move between cells.
+      const occupiedByAnotherFox = this.enemies.some((other) =>
+        other.id !== enemy.id &&
+        !other.isDead &&
+        (
+          (other.gridX === nx && other.gridY === ny) ||
+          (other.targetGridX === nx && other.targetGridY === ny)
+        )
+      );
+      if (occupiedByAnotherFox) return false;
       return true;
     });
 
@@ -663,9 +689,7 @@ export class GameEngine {
 
       case 'POWERUP_SPEED':
         player.speedMultiplier = 1.35;
-        setTimeout(() => {
-          player.speedMultiplier = 1.0;
-        }, SPEED_BOOST_DURATION * 1000);
+        player.speedBoostTimer = SPEED_BOOST_DURATION;
         player.score += 150;
         soundManager.playCollectPowerUp();
         this.addFloatingText('¡VELOCIDAD!', player.gridX, player.gridY, '#3b82f6');

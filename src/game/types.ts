@@ -42,6 +42,7 @@ export interface PlayerState {
   coins: number;
   hasKey: boolean;
   speedMultiplier: number;
+  speedBoostTimer: number;
   isGhost: boolean;
   ghostTimer: number;
   hasShield: boolean;
@@ -133,6 +134,7 @@ export type GameStatus =
   | 'contact'
   | 'how_to_play'
   | 'multiplayer_lobby'
-  | 'admin';
+  | 'admin'
+  | 'sprite_debug';
 
 export type GameMode = 'single' | 'multiplayer';

@@ -1,44 +1,35 @@
 import React from 'react';
 import { Mail, Play, Trophy, Users, Volume, Volume1, Volume2, VolumeX, Shield, Zap, Sparkles } from 'lucide-react';
 import { SoundVolumeLevel } from '../audio/soundManager';
-import { CharacterConfig } from '../game/types';
+import { spriteManager } from '../game/SpriteManager';
+import { SPRITE_ASSETS } from '../game/spriteAssets';
 
 interface StartScreenProps {
   volumeLevel: SoundVolumeLevel;
-  selectedCharacter: CharacterConfig;
   onCycleVolume: () => void;
   onOpenContact: () => void;
   onStartSinglePlayer: () => void;
   onOpenMultiplayer: () => void;
   onOpenRanking: () => void;
-  onOpenCharacterSelect: () => void;
   onOpenAdmin: () => void;
 }
 
 export const StartScreen: React.FC<StartScreenProps> = ({
   volumeLevel,
-  selectedCharacter,
   onCycleVolume,
   onOpenContact,
   onStartSinglePlayer,
   onOpenMultiplayer,
   onOpenRanking,
-  onOpenCharacterSelect,
   onOpenAdmin,
 }) => {
   const [hasMenuBg, setHasMenuBg] = React.useState(false);
   const [hasLogoImg, setHasLogoImg] = React.useState(false);
 
   React.useEffect(() => {
-    // Check fondomenu.png
-    const bg = new Image();
-    bg.src = './sprites/fondomenu.png';
-    bg.onload = () => setHasMenuBg(true);
-
-    // Check logo.png
-    const logo = new Image();
-    logo.src = './sprites/logo.png';
-    logo.onload = () => setHasLogoImg(true);
+    // Reuse the centralized asset cache for menu art.
+    void spriteManager.load(SPRITE_ASSETS.menuBackground.src).then((image) => setHasMenuBg(Boolean(image)));
+    void spriteManager.load(SPRITE_ASSETS.logo.src).then((image) => setHasLogoImg(Boolean(image)));
   }, []);
 
   return (
@@ -74,7 +65,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
       <div className="flex flex-col items-center justify-center my-auto z-10 text-center max-w-xs">
         {hasLogoImg ? (
           <img
-            src="./sprites/logo.png"
+            src={SPRITE_ASSETS.logo.src}
             alt="Chicken Boom Rescue"
             className="w-full max-w-[280px] object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
           />
@@ -95,26 +86,7 @@ export const StartScreen: React.FC<StartScreenProps> = ({
         )}
       </div>
 
-      {/* Selected Character Quick Selector */}
-      <div className="w-full max-w-xs z-10 mb-3">
-        <button
-          onClick={onOpenCharacterSelect}
-          className="w-full flex items-center justify-between px-3 py-2 bg-amber-950/80 backdrop-blur-md rounded-2xl border-2 border-amber-500/80 text-amber-200 hover:bg-amber-900 transition-colors shadow-lg"
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{selectedCharacter.avatarEmoji}</span>
-            <div className="text-left">
-              <div className="text-[11px] text-amber-400 uppercase font-bold">Personaje Seleccionado</div>
-              <div className="text-xs font-black text-white">{selectedCharacter.name}</div>
-            </div>
-          </div>
-          <span className="text-[11px] font-black bg-amber-600/80 px-2 py-0.5 rounded-lg text-white">
-            CAMBIAR
-          </span>
-        </button>
-      </div>
-
-      {/* 3 Main Action Buttons */}
+      {/* Main Action Buttons */}
       <div className="w-full max-w-xs flex flex-col gap-2.5 z-10 mb-2">
         {/* 1. JUGAR (Modo Individual / Back) */}
         <button

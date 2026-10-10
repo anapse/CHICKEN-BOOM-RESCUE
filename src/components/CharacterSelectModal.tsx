@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { X, Check, Shield, Zap, Flame } from 'lucide-react';
 import { CHARACTERS } from '../game/constants';
 import { CharacterConfig } from '../game/types';
@@ -14,6 +14,9 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
   onSelect,
   onClose,
 }) => {
+  const [pendingId, setPendingId] = useState(selectedId);
+  const selectedCharacter = CHARACTERS.find((char) => char.id === pendingId) ?? CHARACTERS[0];
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-md cartoon-card rounded-3xl p-5 sm:p-6 flex flex-col items-center border-4 border-amber-900 shadow-2xl max-h-[90vh] overflow-y-auto">
@@ -35,12 +38,14 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
         {/* Characters Grid */}
         <div className="w-full flex flex-col gap-3">
           {CHARACTERS.map((char) => {
-            const isSelected = char.id === selectedId;
+            const isSelected = char.id === pendingId;
             return (
-              <div
+              <button
+                type="button"
                 key={char.id}
-                onClick={() => onSelect(char)}
-                className={`relative w-full p-3.5 rounded-2xl border-3 cursor-pointer transition-all flex items-center gap-3.5 ${
+                aria-pressed={isSelected}
+                onClick={() => setPendingId(char.id)}
+                className={`relative w-full p-3.5 rounded-2xl border-3 cursor-pointer transition-all flex items-center gap-3.5 text-left ${
                   isSelected
                     ? 'bg-amber-100 border-amber-600 shadow-md scale-[1.02]'
                     : 'bg-white/80 border-amber-300 hover:bg-amber-50'
@@ -116,13 +121,13 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
 
         <button
-          onClick={onClose}
+          onClick={() => onSelect(selectedCharacter)}
           className="w-full py-3 mt-4 rounded-2xl btn-cartoon-yellow font-['Titan_One',sans-serif] text-lg text-amber-950 tracking-wider shadow-lg active:scale-95 transition-transform"
         >
           CONFIRMAR ELECCIÓN
