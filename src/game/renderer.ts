@@ -1,4 +1,5 @@
 import { EXPLOSION_DURATION, GRID_COLS, GRID_ROWS, TILE_SIZE } from './constants';
+import { spriteManager } from './SpriteManager';
 import {
   BombState,
   CellType,
@@ -10,23 +11,9 @@ import {
   TrappedAnimal,
 } from './types';
 
-// Asset Cache for files in public/sprits and public/fondos
-const assetCache: Record<string, HTMLImageElement | null> = {};
-
+// All sprite/image loads are delegated to the centralized manager.
 function getAssetImage(path: string): HTMLImageElement | null {
-  if (assetCache[path] !== undefined) return assetCache[path];
-  if (typeof window === 'undefined') return null;
-
-  const img = new Image();
-  img.src = path;
-  img.onload = () => {
-    assetCache[path] = img;
-  };
-  img.onerror = () => {
-    assetCache[path] = null;
-  };
-  assetCache[path] = null;
-  return null;
+  return spriteManager.getImage(path);
 }
 
 export class GameRenderer {
