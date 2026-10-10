@@ -836,7 +836,10 @@ export class GameRenderer {
         ctx.translate(-(x + TILE_SIZE / 2), -(y + TILE_SIZE / 2));
       }
       // Use the provided fox animation sheet, not the large reference illustration.
-      const frame = SpriteManager.frameAt(this.animTimer, layout.columns, 7);
+      const directionRow: Record<string, number> = { DOWN: 0, LEFT: 1, RIGHT: 2, UP: 3 };
+      const direction = directionRow[enemy.direction] ?? 0;
+      const walkFrame = SpriteManager.frameAt(this.animTimer, layout.columns, 7);
+      const frame = direction * layout.columns + walkFrame;
       spriteManager.draw(ctx, foxPath, {
         x: x - TILE_SIZE * 0.35,
         y: y - TILE_SIZE * 0.45,
@@ -866,7 +869,13 @@ export class GameRenderer {
       ctx.globalAlpha = 0.4;
     }
     if (player.isGhost) ctx.globalAlpha *= 0.45;
-    const frame = SpriteManager.frameAt(this.animTimer, layout.columns, player.isMoving ? 9 : 4);
+    // Four directional rows: down, left, right, up. Animate within the selected row.
+    const directionRow: Record<string, number> = { DOWN: 0, LEFT: 1, RIGHT: 2, UP: 3 };
+    const direction = directionRow[player.direction] ?? 0;
+    const walkFrame = player.isMoving
+      ? SpriteManager.frameAt(this.animTimer, layout.columns, 9)
+      : 0;
+    const frame = direction * layout.columns + walkFrame;
     spriteManager.draw(ctx, characterPath, {
       x: x - TILE_SIZE * 0.35,
       y: y - TILE_SIZE * 0.45,
