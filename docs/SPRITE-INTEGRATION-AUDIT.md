@@ -41,3 +41,10 @@ Code currently draws fallback shapes for the player, fox, rescued animals, cage,
 5. Do not let visual animation alter the engine's collision or damage timing.
 6. Keep the zorro as an enemy only; playable selection is limited to Pollito Rambo, Pollita Rambo and Gallinita Exploradora.
 7. Run `npm run lint` and `npm run build` before merge.
+
+## Additional verified missing files
+
+- `public/sonidos/musica_menu.mp3` — requested menu music file is not present in the public tree.
+- `public/sonidos/musica_juego.mp3` — requested gameplay music file is not present in the public tree.
+
+`src/audio/soundManager.ts` attempts to load those two files and falls back to synthesized Web Audio music if loading fails. This is existing behavior; the master prompt's no-substitute rule needs a decision before replacing/removing that fallback. No audio files were fabricated.
