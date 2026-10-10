@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
-import { X, Check, Shield, Zap, Flame } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Check, Shield, Zap, Flame, ChevronLeft, ChevronRight } from 'lucide-react';
 import { CHARACTERS } from '../game/constants';
 import { CharacterConfig } from '../game/types';
+import { SPRITE_ASSETS } from '../game/spriteAssets';
+import { spriteManager } from '../game/SpriteManager';
 
 interface CharacterSelectModalProps {
   selectedId: string;
@@ -9,128 +11,142 @@ interface CharacterSelectModalProps {
   onClose: () => void;
 }
 
+const CHARACTER_IMAGES: Record<string, string> = {
+  rambo_macho: SPRITE_ASSETS.pollitoRambo.src,
+  rambo_hembra: SPRITE_ASSETS.pollitaRambo.src,
+  exploradora: SPRITE_ASSETS.gallinitaExploradora.src,
+};
+
 export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
   selectedId,
   onSelect,
   onClose,
 }) => {
-  const [pendingId, setPendingId] = useState(selectedId);
-  const selectedCharacter = CHARACTERS.find((char) => char.id === pendingId) ?? CHARACTERS[0];
+  const initialIndex = Math.max(0, CHARACTERS.findIndex((char) => char.id === selectedId));
+  const [activeIndex, setActiveIndex] = useState(initialIndex);
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+  const selectedCharacter = CHARACTERS[activeIndex] ?? CHARACTERS[0];
+
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      CHARACTERS.map(async (character) => {
+        const src = CHARACTER_IMAGES[character.id];
+        const image = await spriteManager.load(src);
+        if (!cancelled) setLoadedImages((current) => ({ ...current, [character.id]: Boolean(image) }));
+      }),
+    );
+    return () => { cancelled = true; };
+  }, []);
+
+  const changeCharacter = (direction: -1 | 1) => {
+    setActiveIndex((current) => (current + direction + CHARACTERS.length) % CHARACTERS.length);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-md cartoon-card rounded-3xl p-5 sm:p-6 flex flex-col items-center border-4 border-amber-900 shadow-2xl max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-2 sm:p-3 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="relative w-full max-w-[340px] max-h-full overflow-y-auto cartoon-card rounded-3xl p-3 sm:p-4 flex flex-col items-center border-4 border-amber-900 shadow-2xl">
         <button
+          type="button"
+          aria-label="Cerrar selección de personaje"
           onClick={onClose}
-          className="absolute top-4 right-4 text-amber-900 hover:text-red-600 transition-colors"
+          className="absolute top-2 right-2 z-10 text-amber-900 hover:text-red-600 transition-colors p-1"
         >
-          <X size={24} />
+          <X size={22} />
         </button>
 
-        <h3 className="font-['Titan_One',sans-serif] text-2xl sm:text-3xl text-amber-950 text-center tracking-wide">
-          SELECCIÓN DE HÉROE
+        <h3 className="font-['Titan_One',sans-serif] text-xl sm:text-2xl text-amber-950 text-center tracking-wide pr-6">
+          ELIGE TU POLLITO
         </h3>
-        <p className="text-xs font-bold text-amber-800 text-center mt-0.5 mb-4">
-          Elige tu plumífero favorito para la misión de rescate
+        <p className="text-[11px] font-bold text-amber-800 text-center mt-0.5 mb-2">
+          Desliza o usa las flechas para ver los 3 héroes
         </p>
 
-        {/* Characters Grid */}
-        <div className="w-full flex flex-col gap-3">
-          {CHARACTERS.map((char) => {
-            const isSelected = char.id === pendingId;
-            return (
-              <button
-                type="button"
-                key={char.id}
-                aria-pressed={isSelected}
-                onClick={() => setPendingId(char.id)}
-                className={`relative w-full p-3.5 rounded-2xl border-3 cursor-pointer transition-all flex items-center gap-3.5 text-left ${
-                  isSelected
-                    ? 'bg-amber-100 border-amber-600 shadow-md scale-[1.02]'
-                    : 'bg-white/80 border-amber-300 hover:bg-amber-50'
-                }`}
-              >
-                {/* Character Avatar */}
-                <div
-                  className="w-16 h-16 rounded-2xl border-3 border-amber-950 flex items-center justify-center text-3xl shadow-md shrink-0"
-                  style={{ backgroundColor: `${char.color}25` }}
-                >
-                  <span>{char.avatarEmoji}</span>
-                </div>
+        <div className="w-full flex items-center gap-1.5">
+          <button
+            type="button"
+            aria-label="Personaje anterior"
+            onClick={() => changeCharacter(-1)}
+            className="shrink-0 w-9 h-10 rounded-xl bg-amber-200 border-2 border-amber-700 text-amber-950 flex items-center justify-center active:scale-95"
+          >
+            <ChevronLeft size={24} />
+          </button>
 
-                {/* Character Info & Stats */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <span className="font-['Titan_One',sans-serif] text-base text-amber-950 truncate">
-                      {char.name}
-                    </span>
-                    {isSelected && (
-                      <span className="bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <Check size={12} /> ACTIVO
-                      </span>
-                    )}
-                  </div>
+          <div
+            className="min-w-0 flex-1 flex flex-col items-center"
+            onTouchStart={(event) => {
+              const touch = event.touches[0];
+              (event.currentTarget as HTMLDivElement).dataset.touchX = String(touch.clientX);
+            }}
+            onTouchEnd={(event) => {
+              const startX = Number((event.currentTarget as HTMLDivElement).dataset.touchX);
+              const endX = event.changedTouches[0]?.clientX ?? startX;
+              const delta = endX - startX;
+              if (Math.abs(delta) > 35) changeCharacter(delta < 0 ? 1 : -1);
+            }}
+          >
+            <div className="w-full h-36 sm:h-40 rounded-2xl border-3 border-amber-900 bg-white/80 flex items-center justify-center overflow-hidden p-2">
+              {loadedImages[selectedCharacter.id] ? (
+                <img
+                  key={selectedCharacter.id}
+                  src={CHARACTER_IMAGES[selectedCharacter.id]}
+                  alt={selectedCharacter.name}
+                  className="max-w-full max-h-full object-contain"
+                  draggable={false}
+                />
+              ) : (
+                <span className="text-5xl" aria-label={selectedCharacter.name}>{selectedCharacter.avatarEmoji}</span>
+              )}
+            </div>
+            <div className="flex items-center justify-center gap-1.5 mt-2" aria-label={`Personaje ${activeIndex + 1} de ${CHARACTERS.length}`}>
+              {CHARACTERS.map((character, index) => (
+                <button
+                  key={character.id}
+                  type="button"
+                  aria-label={`Ver ${character.name}`}
+                  aria-current={index === activeIndex ? 'true' : undefined}
+                  onClick={() => setActiveIndex(index)}
+                  className={`h-2.5 rounded-full transition-all ${index === activeIndex ? 'w-6 bg-amber-700' : 'w-2.5 bg-amber-300'}`}
+                />
+              ))}
+            </div>
+          </div>
 
-                  <p className="text-[11px] text-amber-900/80 line-clamp-1 mb-1 font-semibold">
-                    {char.description}
-                  </p>
+          <button
+            type="button"
+            aria-label="Personaje siguiente"
+            onClick={() => changeCharacter(1)}
+            className="shrink-0 w-9 h-10 rounded-xl bg-amber-200 border-2 border-amber-700 text-amber-950 flex items-center justify-center active:scale-95"
+          >
+            <ChevronRight size={24} />
+          </button>
+        </div>
 
-                  {/* Stats Bars */}
-                  <div className="grid grid-cols-3 gap-2 mt-1">
-                    {/* Defensa */}
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1 text-[10px] font-black text-blue-700">
-                        <Shield size={11} />
-                        <span>DEF {char.defense}/5</span>
-                      </div>
-                      <div className="w-full bg-blue-100 h-1.5 rounded-full overflow-hidden mt-0.5">
-                        <div
-                          className="bg-blue-600 h-full rounded-full"
-                          style={{ width: `${(char.defense / 5) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Velocidad */}
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1 text-[10px] font-black text-amber-700">
-                        <Zap size={11} />
-                        <span>VEL {char.speed}/5</span>
-                      </div>
-                      <div className="w-full bg-amber-100 h-1.5 rounded-full overflow-hidden mt-0.5">
-                        <div
-                          className="bg-amber-600 h-full rounded-full"
-                          style={{ width: `${(char.speed / 5) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Fuerza */}
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-1 text-[10px] font-black text-red-700">
-                        <Flame size={11} />
-                        <span>FZA {char.strength}/5</span>
-                      </div>
-                      <div className="w-full bg-red-100 h-1.5 rounded-full overflow-hidden mt-0.5">
-                        <div
-                          className="bg-red-600 h-full rounded-full"
-                          style={{ width: `${(char.strength / 5) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+        <div className="w-full mt-2 text-center">
+          <h4 className="font-['Titan_One',sans-serif] text-lg text-amber-950 leading-tight">{selectedCharacter.name}</h4>
+          <p className="text-[10px] text-amber-900/80 font-semibold mt-0.5 line-clamp-2">{selectedCharacter.description}</p>
+          <div className="grid grid-cols-3 gap-2 mt-2 text-left">
+            <div>
+              <div className="flex items-center gap-1 text-[10px] font-black text-blue-700"><Shield size={11} /><span>DEF {selectedCharacter.defense}/5</span></div>
+              <div className="w-full bg-blue-100 h-1.5 rounded-full overflow-hidden mt-0.5"><div className="bg-blue-600 h-full rounded-full" style={{ width: `${(selectedCharacter.defense / 5) * 100}%` }} /></div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 text-[10px] font-black text-amber-700"><Zap size={11} /><span>VEL {selectedCharacter.speed}/5</span></div>
+              <div className="w-full bg-amber-100 h-1.5 rounded-full overflow-hidden mt-0.5"><div className="bg-amber-600 h-full rounded-full" style={{ width: `${(selectedCharacter.speed / 5) * 100}%` }} /></div>
+            </div>
+            <div>
+              <div className="flex items-center gap-1 text-[10px] font-black text-red-700"><Flame size={11} /><span>FZA {selectedCharacter.strength}/5</span></div>
+              <div className="w-full bg-red-100 h-1.5 rounded-full overflow-hidden mt-0.5"><div className="bg-red-600 h-full rounded-full" style={{ width: `${(selectedCharacter.strength / 5) * 100}%` }} /></div>
+            </div>
+          </div>
         </div>
 
         <button
+          type="button"
           onClick={() => onSelect(selectedCharacter)}
-          className="w-full py-3 mt-4 rounded-2xl btn-cartoon-yellow font-['Titan_One',sans-serif] text-lg text-amber-950 tracking-wider shadow-lg active:scale-95 transition-transform"
+          className="w-full py-2.5 mt-3 rounded-2xl btn-cartoon-yellow font-['Titan_One',sans-serif] text-base text-amber-950 tracking-wider shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
         >
-          CONFIRMAR ELECCIÓN
+          <Check size={18} /> CONFIRMAR PERSONAJE
         </button>
       </div>
     </div>
