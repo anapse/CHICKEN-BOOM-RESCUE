@@ -40,8 +40,10 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
           {CHARACTERS.map((char) => {
             const isSelected = char.id === pendingId;
             return (
-              <div
+              <button
+                type="button"
                 key={char.id}
+                aria-pressed={isSelected}
                 onClick={() => setPendingId(char.id)}
                 className={`relative w-full p-3.5 rounded-2xl border-3 cursor-pointer transition-all flex items-center gap-3.5 ${
                   isSelected
@@ -119,7 +121,7 @@ export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
                     </div>
                   </div>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
