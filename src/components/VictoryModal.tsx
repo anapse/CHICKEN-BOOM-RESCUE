@@ -47,7 +47,7 @@ export const VictoryModal: React.FC<VictoryModalProps> = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-in fade-in duration-300">
       <div className="w-full max-w-sm cartoon-card rounded-3xl p-6 flex flex-col items-center border-4 border-amber-900 shadow-2xl">
         {/* Victory Icon / Cup */}
         <div className="w-20 h-20 rounded-full bg-gradient-to-b from-yellow-300 to-amber-500 border-4 border-amber-900 flex items-center justify-center text-4xl shadow-xl -mt-12 mb-3 animate-bounce">
