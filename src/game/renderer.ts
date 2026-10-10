@@ -1,5 +1,5 @@
 import { EXPLOSION_DURATION, GRID_COLS, GRID_ROWS, TILE_SIZE } from './constants';
-import { spriteManager } from './SpriteManager';
+import { SpriteManager, spriteManager } from './SpriteManager';
 import { SPRITE_ASSETS } from './spriteAssets';
 import {
   BombState,
@@ -821,8 +821,8 @@ export class GameRenderer {
   // 9. FOX ENEMIES (Anthropomorphic cartoon foxes)
   private renderEnemies(enemies: EnemyState[]) {
     const ctx = this.ctx;
-    const foxPath = './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_43.png';
-    const foxIllustration = getAssetImage(foxPath);
+    const foxPath = SPRITE_ASSETS.foxEnemy.src;
+    const layout = { columns: 4, rows: 4 };
 
     enemies.forEach((enemy) => {
       const x = enemy.x * TILE_SIZE;
@@ -835,14 +835,16 @@ export class GameRenderer {
         ctx.rotate(enemy.deathTimer * 12);
         ctx.translate(-(x + TILE_SIZE / 2), -(y + TILE_SIZE / 2));
       }
-
-      // Prefer the existing large fox artwork; use the sprite sheet only if no
-      // standalone illustration is available. Do not draw a procedural SVG-like fox.
-      const fox = foxIllustration;
-      if (fox && fox.complete && fox.naturalWidth > 0) {
-        const size = TILE_SIZE * 1.75;
-        ctx.drawImage(fox, x + (TILE_SIZE - size) / 2, y + TILE_SIZE - size, size, size);
-      }
+      // Use the provided fox animation sheet, not the large reference illustration.
+      const frame = SpriteManager.frameAt(this.animTimer, layout.columns, 7);
+      spriteManager.draw(ctx, foxPath, {
+        x: x - TILE_SIZE * 0.35,
+        y: y - TILE_SIZE * 0.45,
+        width: TILE_SIZE * 1.7,
+        height: TILE_SIZE * 1.7,
+        frame,
+        layout,
+      });
       ctx.restore();
     });
   }
@@ -851,26 +853,28 @@ export class GameRenderer {
     const ctx = this.ctx;
     const x = player.x * TILE_SIZE;
     const y = player.y * TILE_SIZE;
-    const characterImages: Record<string, string> = {
-      rambo_macho: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_11.png',
-      rambo_hembra: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_04.png',
-      exploradora: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_56.png',
-    };
-    const image = getAssetImage(characterImages[player.characterId] ?? characterImages.rambo_macho);
-    const sprite = image;
+    const characterPath = player.characterId === 'rambo_hembra'
+      ? SPRITE_ASSETS.pollitaRambo.src
+      : player.characterId === 'exploradora'
+        ? SPRITE_ASSETS.gallinitaExploradora.src
+        : SPRITE_ASSETS.pollitoRambo.src;
+    // The supplied sheets are handled as sprite sheets, never as standalone images.
+    const layout = { columns: 4, rows: 4 };
 
     ctx.save();
     if (player.invulnerableTimer > 0 && Math.floor(this.animTimer * 20) % 2 === 0) {
       ctx.globalAlpha = 0.4;
     }
     if (player.isGhost) ctx.globalAlpha *= 0.45;
-
-    // Shield/ghost effects remain simple gameplay indicators; the character itself
-    // always comes from the provided PNG artwork/sprite sheet.
-    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      const size = TILE_SIZE * 1.75;
-      ctx.drawImage(sprite, x + (TILE_SIZE - size) / 2, y + TILE_SIZE - size, size, size);
-    }
+    const frame = SpriteManager.frameAt(this.animTimer, layout.columns, player.isMoving ? 9 : 4);
+    spriteManager.draw(ctx, characterPath, {
+      x: x - TILE_SIZE * 0.35,
+      y: y - TILE_SIZE * 0.45,
+      width: TILE_SIZE * 1.7,
+      height: TILE_SIZE * 1.7,
+      frame,
+      layout,
+    });
     ctx.restore();
   }
 
