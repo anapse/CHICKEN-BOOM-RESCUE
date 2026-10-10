@@ -1,0 +1,991 @@
+CHICKEN BOOM RESCUE
+PROMPT MAESTRO — VERSIÓN 1.0
+Documento de especificación para entregar a Gemini
+
+============================================================
+OBJETIVO
+============================================================
+
+Construir Chicken Boom Rescue como un juego 2D de acción tipo cartoon,
+mobile-first, con animales antropomórficos, vista superior, mapa
+cuadriculado y partidas individuales inicialmente, dejando preparada
+la arquitectura para multijugador.
+
+Este documento es la fuente maestra de requisitos. Gemini debe respetar
+todas las reglas indicadas aquí y no sustituirlas por decisiones propias
+que contradigan la especificación.
+
+
+============================================================
+1. REGLA FUNDAMENTAL DE ARTE
+============================================================
+
+NO generar arte nuevo con IA.
+
+No crear con IA sprites, dibujos, fondos, logos, personajes, iconos
+artísticos ni otros recursos visuales que formen parte del juego.
+
+Los recursos gráficos deben ser proporcionados por el equipo y usados
+como referencia/activos originales del proyecto.
+
+Si falta cualquier recurso, Gemini debe detenerse respecto a ese recurso
+y entregar una LISTA CLARA de los elementos faltantes, indicando qué
+sprite, fondo, animación, logo, icono o recurso se necesita.
+
+No reemplazar un recurso faltante inventando otro con IA.
+
+El estilo visual debe mantenerse coherente con las imágenes que ya están
+en la biblioteca del proyecto.
+
+
+============================================================
+2. IDENTIDAD VISUAL
+============================================================
+
+Todos los animales son ANTROPOMÓRFICOS.
+
+Deben tener características humanas:
+- caminar en dos patas;
+- ropa;
+- gorras, lentes u otros accesorios cuando corresponda;
+- personalidad y expresiones;
+- proporciones de personaje de videojuego cartoon.
+
+No usar animales realistas.
+
+La línea artística debe ser coherente entre protagonista, enemigos,
+animales rescatados, sprites y UI.
+
+
+============================================================
+3. PANTALLA Y RESPONSIVE
+============================================================
+
+El juego está diseñado principalmente como una pantalla vertical 9:16.
+
+En PC:
+- usar el alto disponible de la ventana como referencia;
+- mantener la composición vertical 9:16;
+- no deformar ni estirar el gameplay;
+- aprovechar la ventana de forma responsive.
+
+La interfaz puede ocupar el ancho disponible, pero el área lógica de
+juego debe conservar la proporción vertical 9:16.
+
+El juego debe verse en PC como una pantalla vertical equivalente a un
+teléfono.
+
+
+============================================================
+4. ESTRUCTURA CANVAS + REACT
+============================================================
+
+El mundo del juego se renderiza en CANVAS.
+
+Canvas:
+- mapa;
+- personajes;
+- enemigos;
+- muros;
+- cajas;
+- bombas;
+- explosiones;
+- objetos del escenario;
+- efectos de gameplay.
+
+React:
+- HUD;
+- modales;
+- menús;
+- botones;
+- overlays;
+- indicadores;
+- controles de interfaz;
+- barra de Power-Ups;
+- pantallas auxiliares.
+
+Los elementos React deben estar SUPERPUESTOS sobre el Canvas.
+
+El HUD y los modales NO deben empujar, reducir ni modificar las
+dimensiones reales del Canvas.
+
+El Canvas continúa renderizando el mundo completo debajo de los overlays.
+
+
+============================================================
+5. HUD
+============================================================
+
+HUD superior:
+- ocupa visualmente aproximadamente el 10% superior de la ventana;
+- está superpuesto sobre el Canvas;
+- NO reduce el área real del Canvas.
+
+Debe contener:
+- vidas;
+- temporizador;
+- nivel;
+- botón de pausa;
+- identificación visual del personaje actual.
+
+Vidas:
+- comenzar con 3 corazones;
+- máximo configurable de 5 corazones.
+
+El temporizador de partida normal comienza en 5 minutos.
+Más adelante se podrá modificar la duración.
+
+
+============================================================
+6. ZONA INFERIOR / POWER-UPS
+============================================================
+
+Se reserva aproximadamente el 10% inferior de la ventana para la
+interfaz relacionada con Power-Ups, habilidades y objetos especiales.
+
+Esta zona también funciona como overlay de React.
+
+No debe tapar elementos importantes del gameplay.
+
+La interfaz debe adaptarse a PC y móvil.
+
+
+============================================================
+7. MAPA
+============================================================
+
+El mapa completo tiene un ancho equivalente a 3 pantallas verticales
+9:16.
+
+Conceptualmente:
+
+VISTA DEL JUGADOR = 1 pantalla 9:16
+MAPA COMPLETO = 3 pantallas de ancho
+
+La cámara muestra una sección del mapa y se desplaza para permitir
+recorrer las tres pantallas.
+
+El mapa no debe comprimirse para caber en una sola pantalla.
+
+El mapa tendrá un pequeño padding alrededor.
+
+Padding:
+- superior: un poco mayor para evitar interferencias visuales con el HUD;
+- laterales: pequeño;
+- inferior: pequeño.
+
+El padding permite apreciar el panorama y el dibujo general del mapa.
+
+
+============================================================
+8. BORDE EXTERIOR DEL MAPA
+============================================================
+
+Todo el escenario debe tener un borde perimetral de LADRILLO SÓLIDO.
+
+Ese borde:
+- rodea todo el mapa;
+- define el límite exterior;
+- es permanente;
+- forma parte de la estructura del escenario.
+
+
+============================================================
+9. GRILLA DEL JUEGO
+============================================================
+
+TODO el gameplay debe basarse en una cuadrícula.
+
+El mundo debe ser conceptualmente un tablero cuadriculado.
+
+Todas las celdas tienen el mismo tamaño lógico.
+
+Usar la misma unidad de cuadrícula para:
+- movimiento;
+- posición de jugadores;
+- enemigos;
+- cajas;
+- muros;
+- bombas;
+- explosiones;
+- objetos;
+- distancias de alcance.
+
+Los movimientos se realizan de cuadro en cuadro.
+
+Las posiciones deben poder representarse mediante coordenadas de
+cuadrícula.
+
+No mezclar tamaños arbitrarios para los elementos que participan en
+la lógica de la cuadrícula.
+
+
+============================================================
+10. MUROS INTERNOS
+============================================================
+
+Los muros internos del laberinto se construyen mediante muchos sprites
+individuales de roca.
+
+No deben ser un bloque gráfico único.
+
+Debe existir una colección de pequeños sprites de roca con diferentes
+formas/variaciones que permitan construir las paredes.
+
+Las rocas:
+- son sólidas;
+- tienen colisión;
+- forman paredes del laberinto;
+- no son destruibles mediante las bombas normales.
+
+La distribución de los muros internos puede ser aleatoria en cada
+partida, siempre respetando reglas de jugabilidad.
+
+
+============================================================
+11. CAJAS DE MADERA
+============================================================
+
+Las cajas de madera son obstáculos DESTRUIBLES.
+
+Deben utilizar sprites de cajas de madera.
+
+Las cajas:
+- ocupan celdas de la misma cuadrícula;
+- tienen colisión;
+- bloquean el movimiento;
+- bloquean la propagación de la explosión;
+- pueden destruirse mediante explosiones.
+
+Una caja bloquea la propagación de la explosión detrás de ella.
+
+
+============================================================
+12. GENERACIÓN ALEATORIA
+============================================================
+
+Cada partida/nivel debe tener una distribución aleatoria de:
+- muros internos;
+- cajas de madera;
+- elementos permitidos por las reglas del nivel.
+
+La generación aleatoria debe conservar siempre:
+- caminos jugables;
+- acceso al objetivo;
+- reglas de la cuadrícula;
+- posiciones válidas;
+- condiciones necesarias para terminar el nivel.
+
+Lo que debe permanecer fijo es el objetivo final correspondiente al modo.
+
+
+============================================================
+13. MODO INDIVIDUAL
+============================================================
+
+El jugador puede jugar solo.
+
+Debe:
+1. ingresar su nombre antes de iniciar;
+2. comenzar con el personaje seleccionado;
+3. explorar el mapa;
+4. romper cajas;
+5. obtener puntos, monedas y Power-Ups;
+6. encontrar la llave;
+7. llegar a la jaula final;
+8. abrirla con la llave;
+9. rescatar a los animales;
+10. terminar la partida y guardar el score.
+
+El nombre introducido por el jugador es el nombre utilizado para guardar
+su score en el ranking.
+
+
+============================================================
+14. JAULA FINAL
+============================================================
+
+La tercera pantalla del mapa contiene la jaula final en el modo individual.
+
+La jaula permanece cerrada hasta conseguir la llave.
+
+La llave aparece aleatoriamente dentro de una de las cajas permitidas.
+
+Las cajas pueden contener:
+- puntos;
+- monedas;
+- Power-Ups;
+- llave;
+- otros objetos que se definan posteriormente.
+
+La jaula contiene animales antropomórficos atrapados.
+
+Los animales rescatados deben utilizar sprites propios.
+
+
+============================================================
+15. MODO MULTIJUGADOR
+============================================================
+
+La arquitectura para crear partidas multijugador debe quedar preparada
+desde el principio, aunque el multijugador completo se integre en una
+fase posterior.
+
+El concepto del modo multijugador es:
+- dos pollitos/jugadores;
+- ambos juegan en el mismo mapa;
+- explotan cajas y recorren el escenario;
+- buscan la llave;
+- existe un cofre en la zona central del mapa;
+- el jugador que consigue la llave puede abrir el cofre;
+- al abrirlo aparece una copa;
+- la copa determina al ganador.
+
+No mezclar esta condición de victoria con la jaula final del modo
+individual.
+
+
+============================================================
+16. PERSONAJES JUGABLES
+============================================================
+
+Por ahora solo se utilizará activamente el pollito protagonista.
+
+Deben quedar creados/preparados los siguientes tres personajes:
+
+1. POLLITO MACHO TIPO RAMBO
+   - antropomórfico;
+   - estilo Rambo cartoon;
+   - valiente/agresivo en actitud;
+   - personaje principal inicial.
+
+2. POLLITA TIPO RAMBO
+   - antropomórfica;
+   - también tiene estética tipo Rambo;
+   - personalidad fuerte.
+
+3. GALLINITA EXPLORADORA
+   - antropomórfica;
+   - estilo exploradora;
+   - usa lentes;
+   - personalidad más exploradora que agresiva.
+
+Por ahora el juego debe trabajar con el pollito principal, pero los otros
+dos personajes deben quedar preparados en la arquitectura.
+
+Debe existir una pantalla/estructura de selección de personaje preparada
+para poder ampliar el sistema posteriormente.
+
+Cada personaje debe tener estadísticas preparadas para:
+- defensa;
+- velocidad;
+- fuerza.
+
+Los valores numéricos exactos se definirán posteriormente.
+
+
+============================================================
+17. ICONO DEL PERSONAJE
+============================================================
+
+En el HUD debe aparecer un pequeño icono/sprite del personaje que está
+utilizando actualmente el jugador.
+
+También debe existir el botón de "Cómo jugar".
+
+
+============================================================
+18. CONTROLES
+============================================================
+
+Los controles deben ser táctiles y funcionar claramente en dispositivos
+móviles.
+
+Movimiento mediante interacción táctil/deslizamiento:
+- deslizar/tocar hacia la derecha -> movimiento hacia la derecha;
+- deslizar hacia arriba -> movimiento hacia arriba;
+- deslizar hacia la izquierda -> movimiento hacia la izquierda;
+- equivalente para las demás direcciones.
+
+La lógica debe estar basada en la cuadrícula.
+
+Los controles deben ser suficientemente grandes para uso táctil.
+
+Debe existir una explicación de controles accesible desde "Cómo jugar".
+
+
+============================================================
+19. SISTEMA DE BOMBAS / HUEVOS
+============================================================
+
+Todos los ataques principales tienen identidad visual de HUEVOS CON MECHA.
+
+HUEVO NORMAL:
+- ataque básico;
+- disponible desde el inicio;
+- ilimitado;
+- no se consume;
+- alcance de 1 cuadro;
+- explota automáticamente aproximadamente 2 segundos después de colocarlo.
+
+HUEVO DOBLE:
+- Power-Up consumible;
+- icono de dos huevitos;
+- alcance de 2 cuadros;
+- mayor explosión que el normal;
+- explota automáticamente aproximadamente 2 segundos después de colocarlo.
+
+HUEVO TRIPLE:
+- Power-Up consumible;
+- icono de tres huevitos;
+- alcance de 3 cuadros;
+- mayor explosión;
+- explota automáticamente aproximadamente 2 segundos después de colocarlo.
+
+HUEVO DE DETONACIÓN REMOTA:
+- Power-Up especial;
+- se selecciona manteniendo presionado el botón correspondiente;
+- el jugador coloca la bomba;
+- la bomba NO explota automáticamente;
+- el jugador realiza tap/clic para activar el detonador;
+- debe poder controlar el momento exacto de la detonación.
+
+
+============================================================
+20. LÓGICA DE EXPLOSIÓN
+============================================================
+
+Las explosiones funcionan sobre la cuadrícula.
+
+La propagación SIEMPRE es EN CRUZ:
+
+        ↑
+        |
+←-------X-------→
+        |
+        ↓
+
+Nunca hay propagación diagonal.
+
+La explosión se propaga simultáneamente:
+- hacia arriba;
+- hacia abajo;
+- hacia izquierda;
+- hacia derecha.
+
+No debe propagarse a las cuatro esquinas diagonales.
+
+ALCANCE:
+- bomba normal = 1 cuadro;
+- bomba doble = 2 cuadros;
+- bomba triple = 3 cuadros.
+
+Las bombas no atraviesan muros ni cajas.
+
+Una caja de madera bloquea la propagación de la explosión.
+
+La explosión puede destruir/afectar la primera caja que encuentra en
+cada dirección, pero NO puede atravesarla para destruir otra caja detrás.
+
+Por lo tanto:
+- dos cajas seguidas en la misma dirección NO pueden ser destruidas
+  por una sola explosión;
+- la primera caja bloquea la segunda.
+
+ENEMIGOS:
+Los enemigos sí pueden recibir daño en toda la distancia disponible
+de la explosión si no existe una caja/muro bloqueando la trayectoria.
+
+Ejemplo:
+si hay dos enemigos consecutivos en la misma línea de explosión y el
+alcance es suficiente, ambos pueden ser alcanzados.
+
+Los enemigos no se consideran obstáculos que bloqueen la explosión.
+
+
+============================================================
+21. COLISIÓN
+============================================================
+
+Las bombas tienen colisión.
+
+El jugador puede utilizar las bombas estratégicamente para bloquear
+espacios.
+
+Los enemigos pueden quedar encerrados entre:
+- muros;
+- cajas;
+- bombas;
+- límites del escenario.
+
+Los enemigos tienen colisión entre ellos y no deben atravesarse unos
+a otros.
+
+El movimiento enemigo será deliberadamente sencillo, similar en concepto
+a enemigos de juegos arcade clásicos: movimiento relativamente simple,
+predecible y aprovechable estratégicamente por el jugador.
+
+Un enemigo que permanezca dentro del área de explosión debe recibir daño
+y morir según las reglas de vida/daño que se definan.
+
+
+============================================================
+22. BOMBA Y DAÑO AL PROPIO JUGADOR
+============================================================
+
+Normalmente, si el jugador coloca una bomba y permanece dentro de su
+radio de explosión cuando detona, la explosión también puede dañarlo.
+
+Por eso el jugador debe alejarse o utilizar un Power-Up defensivo.
+
+
+============================================================
+23. POWER-UPS
+============================================================
+
+POWER-UP DE DOBLE HUEVO:
+- dos huevos;
+- alcance de 2 cuadros;
+- mayor potencia.
+
+POWER-UP DE TRIPLE HUEVO:
+- tres huevos;
+- alcance de 3 cuadros;
+- mayor potencia.
+
+POWER-UP DE VELOCIDAD:
+- aumenta temporalmente la velocidad de movimiento del jugador.
+
+POWER-UP FANTASMA:
+- vuelve al jugador visualmente transparente;
+- es temporal;
+- las explosiones no afectan al jugador mientras está activo.
+
+POWER-UP ESCUDO:
+- crea un aura visible alrededor del jugador;
+- es temporal;
+- las explosiones no afectan al jugador;
+- los zorros tampoco pueden dañarlo mientras el escudo esté activo.
+
+Los Power-Ups deben tener representación visual clara y diferenciarse
+entre sí.
+
+
+============================================================
+24. RECOMPENSAS
+============================================================
+
+Las cajas pueden entregar:
+- monedas;
+- puntos;
+- Power-Ups;
+- llave;
+- otros objetos futuros.
+
+Cada recompensa debe tener feedback visual y sonoro.
+
+
+============================================================
+25. PANTALLA INICIAL
+============================================================
+
+La pantalla inicial debe incluir:
+
+- logo del juego en la parte superior;
+- botón de Contacto arriba a la izquierda;
+- botón de Sonido arriba a la derecha;
+- tres botones principales:
+  1. Back
+  2. Multijugador
+  3. Top 50 Ranking
+
+El diseño debe ser vertical, claro y coherente con el estilo del juego.
+
+
+============================================================
+26. CONTACTO
+============================================================
+
+El botón Contacto abre un modal.
+
+El modal debe indicar que para cualquier información el usuario puede
+contactar mediante el correo definido por el equipo.
+
+Correo indicado durante la definición del proyecto:
+anapsep_video@hotmail.com
+
+Gemini debe integrarlo en la estructura de contacto y no inventar otro
+correo.
+
+
+============================================================
+27. SONIDO
+============================================================
+
+El botón de sonido tiene CUATRO estados:
+
+1. 100%
+2. medio
+3. bajo
+4. apagado
+
+Cada pulsación avanza al siguiente estado.
+
+Después de apagado, la siguiente pulsación vuelve a 100%.
+
+Debe existir feedback visual del estado actual.
+
+
+============================================================
+28. MÚSICA
+============================================================
+
+Crear/preparar dos ambientes musicales:
+
+MENÚ:
+- estilo tipo steel band;
+- suave;
+- ligeramente rápido/animado;
+- apropiado para la entrada y menús.
+
+JUEGO:
+- estilo tipo steel band;
+- más dinámico;
+- apropiado para la acción.
+
+Al comenzar el juego:
+- detener/transicionar correctamente desde la música de menú;
+- reproducir la música del juego.
+
+Al terminar la partida:
+- detener/transicionar la música del juego;
+- regresar a la música suave del menú.
+
+IMPORTANTE:
+La música/sonidos deben respetar la regla general de arte/audio del
+proyecto. Si un recurso de audio no está disponible, indicar claramente
+qué archivo se necesita en lugar de inventar un recurso que contradiga
+las reglas del proyecto.
+
+
+============================================================
+29. EFECTOS DE SONIDO
+============================================================
+
+Debe existir sonido para:
+
+- botones/clics;
+- colocar bombas;
+- detonación;
+- explosiones;
+- destrucción de cajas;
+- destrucción/impacto;
+- recibir daño;
+- obtener puntos;
+- recoger monedas;
+- obtener Power-Ups;
+- obtener la llave;
+- abrir la jaula;
+- abrir el cofre;
+- aparición de la copa;
+- acciones relevantes del juego.
+
+Los sonidos deben tener feedback claro y no duplicarse accidentalmente.
+
+
+============================================================
+30. PAUSA
+============================================================
+
+El HUD debe incluir botón de pausa.
+
+La pausa debe detener correctamente:
+- movimiento;
+- enemigos;
+- temporizador;
+- bombas;
+- animaciones de gameplay;
+- lógica de juego que dependa del tiempo.
+
+Al reanudar, todo continúa correctamente.
+
+
+============================================================
+31. FIREBASE
+============================================================
+
+Es OBLIGATORIO crear y configurar Firebase como base de datos del juego.
+
+Todo debe quedar dentro del proyecto Firebase correspondiente.
+
+No considerar terminada la implementación si Firebase no está preparado.
+
+
+============================================================
+32. RANKING
+============================================================
+
+Es OBLIGATORIO crear una colección llamada exactamente:
+
+ranking
+
+La colección debe guardar como mínimo:
+
+playerName
+score
+
+El nombre introducido al iniciar la partida debe utilizarse como
+playerName.
+
+El score del modo individual debe poder guardarse para el ranking.
+
+La estructura debe quedar preparada para mostrar el Top 50.
+
+
+============================================================
+33. ANALÍTICA
+============================================================
+
+Es OBLIGATORIO crear una colección de analítica en Firebase.
+
+Debe permitir registrar y contabilizar las visitas del juego.
+
+La analítica debe servir para monitorear desde la página de ANAPSE
+Video, incluyendo las visitas y las métricas que se definan para el
+juego.
+
+No dejar la analítica como una idea futura: la estructura debe crearse
+desde el inicio.
+
+
+============================================================
+34. DASHBOARD /ADMIN
+============================================================
+
+Cada juego debe tener su propio dashboard administrativo.
+
+Ruta obligatoria:
+
+/admin
+
+El dashboard debe permitir visualizar la analítica del juego.
+
+Debe quedar preparado para mostrar las métricas registradas en Firebase.
+
+
+============================================================
+35. NOMBRE DEL JUGADOR
+============================================================
+
+Al pulsar Jugar o iniciar una partida individual, el jugador debe
+ingresar obligatoriamente su nombre antes de comenzar.
+
+No permitir iniciar la partida sin nombre válido.
+
+Ese nombre se utiliza para guardar el score.
+
+
+============================================================
+36. RANKING TOP 50
+============================================================
+
+La pantalla Top 50 debe mostrar el ranking de puntuaciones del juego
+utilizando la colección ranking de Firebase.
+
+Debe quedar preparado para ordenar los scores correctamente.
+
+
+============================================================
+37. GITHUB / ARCHIVOS DEL PROYECTO
+============================================================
+
+Gemini debe crear TODOS los archivos necesarios del proyecto.
+
+No debe asumir que el usuario creará manualmente archivos esenciales.
+
+Debe incluir:
+- código fuente;
+- package.json;
+- configuración del framework/build;
+- configuración de Vite cuando corresponda;
+- configuración Firebase necesaria;
+- assets/referencias;
+- configuración de GitHub Pages;
+- configuración de build;
+- configuración de deploy;
+- workflows de GitHub Actions cuando sean necesarios;
+- cualquier otro archivo requerido para ejecutar y desplegar el proyecto.
+
+No olvidar archivos de configuración de GitHub Pages.
+
+No olvidar la configuración de deploy.
+
+
+============================================================
+38. GITHUB PAGES — REGLA DE VALIDACIÓN
+============================================================
+
+Gemini NO puede considerar terminado el proyecto simplemente porque
+el código haya sido escrito.
+
+Antes de terminar debe:
+
+1. comprobar que todos los archivos necesarios existen;
+2. ejecutar/comprobar el build;
+3. comprobar la configuración de GitHub Pages;
+4. comprobar la ruta/base del proyecto cuando sea necesaria;
+5. comprobar el proceso de deploy;
+6. corregir errores;
+7. volver a comprobar después de las correcciones.
+
+El proyecto debe quedar listo para subir al repositorio y desplegarse.
+
+
+============================================================
+39. ARQUITECTURA PREPARADA PARA MULTIJUGADOR
+============================================================
+
+Aunque el multijugador completo no sea parte de la primera fase,
+la arquitectura debe dejar preparada la creación de partidas.
+
+No eliminar esta preparación.
+
+Debe ser posible incorporar posteriormente:
+- creación de sala;
+- unión a sala;
+- dos jugadores;
+- sincronización;
+- selección de personaje;
+- gameplay compartido;
+- condición de victoria del cofre.
+
+
+============================================================
+40. PRINCIPIO DE DESARROLLO
+============================================================
+
+No eliminar características previamente definidas para sustituirlas
+por una solución más sencilla sin indicarlo.
+
+No crear sistemas contradictorios.
+
+Mantener separadas:
+- lógica del juego;
+- renderizado Canvas;
+- UI React;
+- Firebase;
+- analítica;
+- ranking;
+- audio;
+- futura capa multijugador.
+
+Toda nueva característica debe integrarse sin romper las reglas
+anteriores.
+
+
+============================================================
+41. CONDICIÓN DE ENTREGA A GEMINI
+============================================================
+
+Antes de declarar el trabajo terminado, Gemini debe revisar:
+
+[ ] Canvas y React correctamente separados.
+[ ] Overlay/HUD no altera el tamaño real del Canvas.
+[ ] Proporción 9:16 correcta.
+[ ] Mapa de tres pantallas de ancho.
+[ ] Grilla única y consistente.
+[ ] Borde exterior de ladrillo sólido.
+[ ] Muros de roca con sprites.
+[ ] Cajas de madera destruibles.
+[ ] Generación aleatoria válida.
+[ ] Jaula final en modo individual.
+[ ] Cofre central y copa en modo multijugador.
+[ ] Pollito principal funcionando.
+[ ] Otros dos personajes preparados.
+[ ] Enemigos zorro antropomórficos.
+[ ] Sistema de bombas funcionando.
+[ ] Explosión exclusivamente en cruz.
+[ ] Sin explosión diagonal.
+[ ] Alcance 1/2/3 cuadros.
+[ ] Las cajas bloquean la explosión.
+[ ] La explosión no atraviesa cajas.
+[ ] Dos cajas seguidas no se destruyen con una explosión.
+[ ] Enemigos pueden recibir daño a distancia si la trayectoria está libre.
+[ ] Power-Ups de velocidad, fantasma y escudo.
+[ ] HUD de vidas, temporizador, nivel, pausa y personaje.
+[ ] Control de sonido 100/medio/bajo/apagado.
+[ ] Música de menú y juego.
+[ ] Efectos de sonido.
+[ ] Nombre obligatorio antes de jugar.
+[ ] Firebase configurado.
+[ ] Colección ranking creada.
+[ ] playerName y score implementados.
+[ ] Colección de analítica creada.
+[ ] Dashboard /admin creado.
+[ ] Top 50 preparado.
+[ ] Arquitectura multijugador preparada.
+[ ] Todos los archivos del proyecto creados.
+[ ] GitHub Pages configurado.
+[ ] Build comprobado.
+[ ] Deploy comprobado.
+[ ] No falta ningún archivo esencial.
+[ ] No se generó arte nuevo con IA.
+[ ] Los recursos faltantes fueron identificados en una lista.
+
+
+============================================================
+42. REGLA DE CAMBIOS FUTUROS
+============================================================
+
+Este documento representa la versión maestra actual.
+
+Cuando se solicite un cambio:
+- incorporar el cambio a esta especificación;
+- conservar las reglas anteriores que no hayan sido reemplazadas;
+- evitar duplicaciones o contradicciones;
+- mantener una única versión consolidada para entregar a Gemini.
+
+VERSIÓN ACTUAL: 1.0
+NOMBRE DEL PROYECTO: CHICKEN BOOM RESCUE
+
+============================================================
+ACTUALIZACIÓN ACUMULATIVA — 10 OCTUBRE 2026
+============================================================
+
+FLUJO OBLIGATORIO DE JUEGO INDIVIDUAL
+1. El jugador pulsa JUGAR en el menú principal.
+2. Se solicita y valida el nombre/apodo (1–25 caracteres, sin espacios vacíos).
+3. Se muestra la selección de personaje.
+4. Solo se permite elegir entre estos tres personajes jugables:
+   - Pollito Rambo (rambo_macho).
+   - Pollita Rambo / Pollita Comando (rambo_hembra).
+   - Gallinita Exploradora (exploradora).
+5. La selección debe confirmarse explícitamente.
+6. Solo después de confirmar se inicializan el motor, el mapa, enemigos, bombas y temporizador.
+7. Si el usuario cierra el selector, vuelve al paso de nombre; no se inicia la partida.
+
+El menú principal no debe mostrar un selector rápido de personaje. El personaje no se elige antes de pulsar JUGAR y antes de introducir el nombre.
+
+REGLA DE USO DEL ARTE DEL ZORRO
+El zorro bandido es un enemigo. La imagen grande del zorro es referencia de diseño, no un personaje seleccionable. La hoja de sprites del zorro solo se integra en el renderizado/animación de enemigos una vez verificadas sus celdas. Nunca añadir el zorro a CHARACTERS.
+
+GESTIÓN CENTRALIZADA DE SPRITES
+- Implementar y usar src/game/SpriteManager.ts para carga, caché, precarga selectiva, estado de carga/error, dimensiones, recorte por celdas explícitamente configuradas, inversión horizontal, opacidad y cálculo de fotogramas.
+- El SpriteManager no controla reglas del juego: colisiones, daño, explosiones lógicas, bombas, puntuación, rescate y mapa permanecen en el motor.
+- No asumir cuadrículas ni fotogramas por el nombre del archivo. Las hojas con “4x4” requieren verificar que las 16 celdas sean iguales antes de integrarlas.
+- Mantener los PNG originales sin sobrescribirlos ni redibujarlos. Los recortes se definen mediante metadatos, no editando destructivamente la fuente.
+- Ante recursos ausentes o fallidos, informar la ruta exacta; no inventar arte sustituto.
+- No integrar imágenes de referencia de contenido todavía no identificado como sprites de juego.
+
+INVENTARIO DE RECURSOS
+La lista de PNG existentes y el estado de verificación se mantiene en docs/SPRITE-INVENTORY.md. El script scripts/inventory-sprites.mjs inspecciona cabeceras PNG locales y genera metadatos técnicos. La presencia de un canal alfa no demuestra por sí sola que todos los píxeles exteriores sean transparentes; validar el contenido visualmente antes de certificarlo.
+
+ESTADO DE IMPLEMENTACIÓN
+- Se creó la rama de trabajo fix/character-selection-flow para no escribir directamente en main.
+- Se ajustó el flujo individual a JUGAR → nombre → selección confirmada → partida.
+- SpriteManager se añadió y el cargador del renderer se delegó en él.
+- La integración de las hojas de personajes, zorro, explosiones, recompensas y animales sigue pendiente de verificar límites y fotogramas; no declarar esa integración terminada hasta probarla.
+- logo.png y fondojuego.png existen en public/sprites; no volver a generarlos.
+- Ejecutar build y lint, corregir errores y revisar el resultado antes de fusionar la rama.
+
+Esta actualización complementa el prompt maestro original. No elimina ni sustituye requisitos previos.
