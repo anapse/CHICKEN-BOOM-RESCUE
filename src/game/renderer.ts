@@ -197,150 +197,26 @@ export class GameRenderer {
     }
   }
 
-  // 1. SOLID BRICK PERIMETER WALL
+  // Shared wood/stone atlas: left half is the wooden crate, right half is stone wall.
+  // The supplied PNG is 1774×887, split into two 887×887 panels.
   private drawBrickWall(x: number, y: number) {
-    const ctx = this.ctx;
-    const sprite = getAssetImage('./sprites/ladrillo.png') || getAssetImage('./ladrillo.png');
-    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      ctx.drawImage(sprite, x, y, TILE_SIZE, TILE_SIZE);
-      return;
-    }
-
-    ctx.fillStyle = '#7c2d12'; // Rich brick red
-    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-
-    // Bevel highlights & shadow
-    ctx.fillStyle = '#b45309';
-    ctx.fillRect(x, y, TILE_SIZE, 4);
-    ctx.fillRect(x, y, 4, TILE_SIZE);
-
-    ctx.fillStyle = '#451a03';
-    ctx.fillRect(x, y + TILE_SIZE - 4, TILE_SIZE, 4);
-    ctx.fillRect(x + TILE_SIZE - 4, y, 4, TILE_SIZE);
-
-    // Mortar lines
-    ctx.fillStyle = '#292524';
-    ctx.fillRect(x, y + 15, TILE_SIZE, 2);
-    ctx.fillRect(x, y + 31, TILE_SIZE, 2);
-
-    ctx.fillRect(x + 24, y, 2, 15);
-    ctx.fillRect(x + 12, y + 17, 2, 14);
-    ctx.fillRect(x + 36, y + 17, 2, 14);
-    ctx.fillRect(x + 24, y + 33, 2, 15);
+    spriteManager.draw(this.ctx, SPRITE_ASSETS.woodStoneTiles.src, {
+      x, y, width: TILE_SIZE, height: TILE_SIZE,
+      sourceRect: { x: 887, y: 0, width: 887, height: 887 },
+    });
   }
 
-  // 2. INDIVIDUAL ROCK SPRITE WALLS (indestructible stone maze)
-  private drawRockWall(x: number, y: number, gx: number, gy: number) {
-    const ctx = this.ctx;
-    const variation = (gx * 13 + gy * 7) % 3;
-
-    const rockSprite = getAssetImage(`./sprites/roca${variation + 1}.png`) || getAssetImage('./sprites/roca.png') || getAssetImage('./roca.png');
-    if (rockSprite && rockSprite.complete && rockSprite.naturalWidth > 0) {
-      ctx.drawImage(rockSprite, x, y, TILE_SIZE, TILE_SIZE);
-      return;
-    }
-
-    // Rock base
-    ctx.fillStyle = '#475569';
-    ctx.beginPath();
-    ctx.roundRect(x + 2, y + 2, TILE_SIZE - 4, TILE_SIZE - 4, 8);
-    ctx.fill();
-
-    // 3D stone bevel
-    ctx.fillStyle = '#94a3b8';
-    ctx.beginPath();
-    ctx.roundRect(x + 3, y + 3, TILE_SIZE - 6, 8, 4);
-    ctx.fill();
-
-    ctx.fillStyle = '#1e293b';
-    ctx.beginPath();
-    ctx.roundRect(x + 4, y + TILE_SIZE - 10, TILE_SIZE - 8, 7, 3);
-    ctx.fill();
-
-    // Stone cracks & highlights
-    ctx.strokeStyle = '#0f172a';
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    if (variation === 0) {
-      ctx.moveTo(x + 12, y + 8);
-      ctx.lineTo(x + 20, y + 22);
-      ctx.lineTo(x + 16, y + 38);
-      ctx.moveTo(x + 20, y + 22);
-      ctx.lineTo(x + 34, y + 28);
-    } else if (variation === 1) {
-      ctx.moveTo(x + 34, y + 10);
-      ctx.lineTo(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
-      ctx.lineTo(x + 30, y + 40);
-    } else {
-      ctx.moveTo(x + TILE_SIZE * 0.2, y + TILE_SIZE / 2);
-      ctx.lineTo(x + 38, y + 22);
-      ctx.moveTo(x + TILE_SIZE / 2, y + TILE_SIZE * 0.2);
-      ctx.lineTo(x + 26, y + 38);
-    }
-    ctx.stroke();
-
-    // Little moss touch
-    ctx.fillStyle = '#65a30d';
-    ctx.beginPath();
-    ctx.arc(x + 10, y + 38, 4, 0, Math.PI * 2);
-    ctx.arc(x + 38, y + 12, 3, 0, Math.PI * 2);
-    ctx.fill();
+  private drawRockWall(x: number, y: number, _gx: number, _gy: number) {
+    spriteManager.draw(this.ctx, SPRITE_ASSETS.woodStoneTiles.src, {
+      x, y, width: TILE_SIZE, height: TILE_SIZE,
+      sourceRect: { x: 887, y: 0, width: 887, height: 887 },
+    });
   }
 
-  // 3. WOODEN CRATE (Destructible)
   private drawWoodenCrate(x: number, y: number) {
-    const ctx = this.ctx;
-    const crateSprite = getAssetImage('./sprites/caja.png') || getAssetImage('./caja.png');
-    if (crateSprite && crateSprite.complete && crateSprite.naturalWidth > 0) {
-      ctx.drawImage(crateSprite, x, y, TILE_SIZE, TILE_SIZE);
-      return;
-    }
-
-    // Drop shadow
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-    ctx.beginPath();
-    ctx.roundRect(x + 4, y + TILE_SIZE - 6, TILE_SIZE - 8, 6, 3);
-    ctx.fill();
-
-    // Wood body
-    ctx.fillStyle = '#d97706';
-    ctx.beginPath();
-    ctx.roundRect(x + 3, y + 3, TILE_SIZE - 6, TILE_SIZE - 6, 6);
-    ctx.fill();
-
-    // Inner panel
-    ctx.fillStyle = '#b45309';
-    ctx.beginPath();
-    ctx.roundRect(x + 7, y + 7, TILE_SIZE - 14, TILE_SIZE - 14, 4);
-    ctx.fill();
-
-    // Wooden Cross Bracing (X)
-    ctx.strokeStyle = '#78350f';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(x + 8, y + 8);
-    ctx.lineTo(x + TILE_SIZE - 8, y + TILE_SIZE - 8);
-    ctx.moveTo(x + TILE_SIZE - 8, y + 8);
-    ctx.lineTo(x + 8, y + TILE_SIZE - 8);
-    ctx.stroke();
-
-    // Border frame
-    ctx.strokeStyle = '#92400e';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(x + 5, y + 5, TILE_SIZE - 10, TILE_SIZE - 10);
-
-    // Corner metal rivets
-    ctx.fillStyle = '#fef08a';
-    const corners = [
-      [x + 7, y + 7],
-      [x + TILE_SIZE - 7, y + 7],
-      [x + 7, y + TILE_SIZE - 7],
-      [x + TILE_SIZE - 7, y + TILE_SIZE - 7],
-    ];
-    corners.forEach(([cx, cy]) => {
-      ctx.beginPath();
-      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
-      ctx.fill();
+    spriteManager.draw(this.ctx, SPRITE_ASSETS.woodStoneTiles.src, {
+      x, y, width: TILE_SIZE, height: TILE_SIZE,
+      sourceRect: { x: 0, y: 0, width: 887, height: 887 },
     });
   }
 
