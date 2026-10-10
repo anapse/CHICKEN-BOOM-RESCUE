@@ -12,9 +12,9 @@ interface CharacterSelectModalProps {
 
 const CHARACTER_IMAGES: Record<string, string> = {
   // Use the large standalone character illustrations for the selector, never animation sprite sheets.
-  rambo_macho: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_43.png',
-  rambo_hembra: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_56.png',
-  exploradora: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_04.png',
+  rambo_macho: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_11.png',
+  rambo_hembra: './sprites/Imagen de ChatGPT 10 oct 2026, 15_50_04.png',
+  exploradora: './sprites/Imagen de ChatGPT 10 oct 2026, 15_49_56.png',
 };
 
 export const CharacterSelectModal: React.FC<CharacterSelectModalProps> = ({
