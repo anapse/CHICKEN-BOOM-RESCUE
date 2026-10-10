@@ -226,12 +226,13 @@ export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): Gene
     });
   }
 
-  // 6. Trapped Animals in the Cage (Single player mode)
-  const trappedAnimals: TrappedAnimal[] = [
+  // 6. Trapped animals belong only to the single-player cage objective.
+  // Multiplayer uses the central chest/trophy and must not show a stray cage group.
+  const trappedAnimals: TrappedAnimal[] = mode === 'single' ? [
     { id: 'piglet', name: 'Chanchito Barnie', type: 'piglet', isRescued: false, x: cageLocation.x, y: cageLocation.y },
     { id: 'sheep', name: 'Ovejita Lana', type: 'sheep', isRescued: false, x: cageLocation.x + 0.3, y: cageLocation.y },
     { id: 'bunny', name: 'Conejito Saltón', type: 'bunny', isRescued: false, x: cageLocation.x - 0.3, y: cageLocation.y },
-  ];
+  ] : [];
 
   return {
     grid,
