@@ -989,3 +989,24 @@ ESTADO DE IMPLEMENTACIÓN
 - Ejecutar build y lint, corregir errores y revisar el resultado antes de fusionar la rama.
 
 Esta actualización complementa el prompt maestro original. No elimina ni sustituye requisitos previos.
+
+============================================================
+ACTUALIZACIÓN DE AUDITORÍA — 10 OCTUBRE 2026 (CONTINUACIÓN)
+============================================================
+
+MAPA — GARANTÍA DE ACCESO
+Se corrigió src/game/mapGenerator.ts para:
+- despejar las cuatro celdas adyacentes a la jaula o al cofre de objetivo;
+- garantizar una caja destructible con llave incluso en el caso defensivo de no hallar cajas candidatas;
+- abrir un corredor de acceso desde el inicio hasta la caja de la llave y desde la llave hasta el objetivo, retirando solo muros de roca de la ruta;
+- conservar las cajas del corredor como obstáculos destructibles: la ruta exige abrirlas y no elimina la regla de que las cajas bloquean el movimiento y la propagación de la explosión.
+
+AUDIO — RECURSOS AUSENTES
+No existen en public/sonidos/ los archivos:
+- musica_menu.mp3
+- musica_juego.mp3
+
+src/audio/soundManager.ts intenta cargarlos y utiliza síntesis Web Audio como fallback existente. No se generaron archivos de audio. Este fallback debe revisarse frente a la regla original de no inventar sustitutos, sin retirar funcionalidad hasta validar el comportamiento acordado.
+
+VALIDACIÓN AUTOMÁTICA
+Se añadió .github/workflows/validate.yml para ejecutar npm run lint, npm run build y el inventario de PNG en el resumen de GitHub Actions. La rama ya tuvo ejecuciones exitosas en commits anteriores; el último commit debe validarse de nuevo antes de fusionar.
