@@ -13,7 +13,7 @@ export const PauseModal: React.FC<PauseModalProps> = ({
   onQuitToMenu,
 }) => {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="w-full max-w-xs cartoon-card rounded-3xl p-6 flex flex-col items-center border-4 border-amber-900 shadow-2xl">
         <h3 className="font-['Titan_One',sans-serif] text-3xl text-amber-950 text-center tracking-wide mb-6">
           JUEGO EN PAUSA
