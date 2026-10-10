@@ -171,18 +171,20 @@ export default function App() {
   // Victory Handler
   const handleVictory = useCallback(async () => {
     const engine = engineRef.current;
-    const p1 = engine.players[0];
+    const winner = engine.players.find((player) => player.id === engine.winnerPlayerId) ?? engine.players[0];
     const timeBonus = Math.floor(engine.timeRemaining * 10);
-    const finalScore = p1 ? p1.score + timeBonus : 0;
+    const finalScore = winner ? winner.score + timeBonus : 0;
 
+    if (winner) setPlayerMirror({ ...winner });
+    setTimeRemainingMirror(engine.timeRemaining);
     trackAnalytics('game_victory', mode);
 
-    if (p1) {
+    if (winner) {
       await saveRankingScore({
-        playerName: p1.name,
+        playerName: winner.name,
         score: finalScore,
         level: currentLevel,
-        rescued: true,
+        rescued: mode === 'single',
       });
     }
 
@@ -194,6 +196,8 @@ export default function App() {
     const engine = engineRef.current;
     const p1 = engine.players[0];
 
+    if (p1) setPlayerMirror({ ...p1 });
+    setTimeRemainingMirror(engine.timeRemaining);
     trackAnalytics('game_over', mode);
 
     if (p1 && p1.score > 0) {
@@ -239,10 +243,12 @@ export default function App() {
         engine.update(deltaTime, viewportW);
 
         // Update mirrors for React HUD
-        if (engine.players[0]) {
+        // Freeze the displayed player snapshot when an ending is triggered.
+        // The victory handler will select the actual winner (including player 2).
+        if (!engine.isVictory && !engine.isGameOver && engine.players[0]) {
           setPlayerMirror({ ...engine.players[0] });
+          setTimeRemainingMirror(engine.timeRemaining);
         }
-        setTimeRemainingMirror(engine.timeRemaining);
 
         // Check victory or game over conditions
         if (engine.isVictory && status === 'playing' && !endHandledRef.current) {
