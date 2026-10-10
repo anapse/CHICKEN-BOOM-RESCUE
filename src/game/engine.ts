@@ -421,7 +421,7 @@ export class GameEngine {
 
         // Destructible Crate -> DESTROY crate, but blast DOES NOT pass through
         if (cell === 'CRATE') {
-          this.destroyCrate(tx, ty);
+          this.destroyCrate(tx, ty, bomb.ownerId);
           cells.push({ gridX: tx, gridY: ty, isCenter: false, direction: dir });
           // CRITICAL RULE 20: Crate blocks propagation behind it
           break;
@@ -449,7 +449,7 @@ export class GameEngine {
     this.applyExplosionDamage(cells, bomb.ownerId);
   }
 
-  private destroyCrate(x: number, y: number) {
+  private destroyCrate(x: number, y: number, ownerId?: string) {
     this.grid[y][x] = 'EMPTY';
     soundManager.playCrateDestroy();
 
@@ -467,9 +467,10 @@ export class GameEngine {
       this.hiddenPickups.delete(coordKey);
     }
 
-    // Add points to owner
-    if (this.players[0]) {
-      this.players[0].score += 50;
+    // Reward the player whose bomb destroyed the crate (important in multiplayer).
+    const owner = this.players.find((player) => player.id === ownerId) ?? this.players[0];
+    if (owner) {
+      owner.score += 50;
       this.addFloatingText('+50', x, y, '#fde047');
     }
   }
