@@ -1037,3 +1037,6 @@ El power-up de velocidad ya no usa setTimeout del navegador. Su duración se gua
 
 COLISIÓN ENTRE ZORROS
 El movimiento de enemigos ahora reserva la celda actual y la celda objetivo de los otros zorros vivos. No se eligen destinos ocupados ni se permite intercambiar posiciones cara a cara, reduciendo solapamientos entre enemigos. La lógica sigue dentro de GameEngine, separada del renderizado.
+
+INSPECCIÓN VISUAL DE HOJAS
+Se añadió una pantalla técnica accesible con el parámetro ?sprite-debug=1. Muestra los PNG originales, sus dimensiones naturales y una cuadrícula editable de filas/columnas para comprobar recortes sin modificar los archivos. Los valores de cuadrícula iniciales son pistas; no certifican por sí solos los límites de cada sprite.
