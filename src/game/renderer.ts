@@ -1,5 +1,6 @@
 import { EXPLOSION_DURATION, GRID_COLS, GRID_ROWS, TILE_SIZE } from './constants';
 import { spriteManager } from './SpriteManager';
+import { SPRITE_ASSETS } from './spriteAssets';
 import {
   BombState,
   CellType,
@@ -105,7 +106,7 @@ export class GameRenderer {
     const totalH = rows * TILE_SIZE;
 
     // Check if user has uploaded fondojuego.png to public/sprites/
-    const bgImg = getAssetImage('./sprites/fondojuego.png') || getAssetImage('./fondojuego.png');
+    const bgImg = getAssetImage(SPRITE_ASSETS.gameBackground.src) || getAssetImage('./fondojuego.png');
     if (bgImg && bgImg.complete && bgImg.naturalWidth > 0) {
       // Repeat texture across the 3 screens
       const pat = ctx.createPattern(bgImg, 'repeat');
