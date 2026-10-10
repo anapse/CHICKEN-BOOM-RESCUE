@@ -596,8 +596,20 @@ export class GameEngine {
       if (nx < 0 || nx >= GRID_COLS || ny < 0 || ny >= GRID_ROWS) return false;
       const cell = this.grid[ny][nx];
       if (cell !== 'EMPTY') return false;
-      // Cannot walk into active bombs
+      // Cannot walk into active bombs.
       if (this.bombs.some((b) => b.gridX === nx && b.gridY === ny)) return false;
+
+      // Foxes reserve both their current cell and their next target cell.
+      // This prevents overlap and head-on swaps while they move between cells.
+      const occupiedByAnotherFox = this.enemies.some((other) =>
+        other.id !== enemy.id &&
+        !other.isDead &&
+        (
+          (other.gridX === nx && other.gridY === ny) ||
+          (other.targetGridX === nx && other.targetGridY === ny)
+        )
+      );
+      if (occupiedByAnotherFox) return false;
       return true;
     });
 
