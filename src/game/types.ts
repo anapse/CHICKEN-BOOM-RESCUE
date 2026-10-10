@@ -134,6 +134,7 @@ export type GameStatus =
   | 'contact'
   | 'how_to_play'
   | 'multiplayer_lobby'
-  | 'admin';
+  | 'admin'
+  | 'sprite_debug';
 
 export type GameMode = 'single' | 'multiplayer';
