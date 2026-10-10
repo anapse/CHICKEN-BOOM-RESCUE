@@ -37,6 +37,7 @@ export default function App() {
   const rendererRef = useRef<GameRenderer | null>(null);
   const requestRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  const endHandledRef = useRef<boolean>(false);
 
   // Active player state mirror for reactive React HUD
   const [playerMirror, setPlayerMirror] = useState<PlayerState | null>(null);
@@ -79,6 +80,7 @@ export default function App() {
 
   // Step 2: save the player's name and continue to character selection.
   const handleLaunchGame = useCallback((name: string) => {
+    endHandledRef.current = false;
     setPlayerName(name);
     localStorage.setItem('cbr_player_name', name);
     soundManager.playClick();
@@ -87,6 +89,7 @@ export default function App() {
 
   // Step 3: only after confirming a playable character do we start the game.
   const handleConfirmCharacter = useCallback((character: CharacterConfig) => {
+    endHandledRef.current = false;
     setSelectedCharacter(character);
     soundManager.playClick();
     soundManager.playMusic('game');
@@ -105,6 +108,7 @@ export default function App() {
     player2Name: string;
     player2Char: 'rambo_macho' | 'rambo_hembra' | 'exploradora';
   }) => {
+    endHandledRef.current = false;
     soundManager.playClick();
     soundManager.playMusic('game');
     setMode('multiplayer');
@@ -144,10 +148,17 @@ export default function App() {
     soundManager.playClick();
     soundManager.playMusic('game');
     const engine = engineRef.current;
+    const previousPlayers = engine.players;
+    const previousPlayer1 = previousPlayers[0];
+    const previousPlayer2 = previousPlayers[1];
+    endHandledRef.current = false;
     engine.initGame({
       mode,
-      player1Name: playerName,
-      player1Char: selectedCharacter.id,
+      player1Name: previousPlayer1?.name || playerName,
+      player1Char: previousPlayer1?.characterId || selectedCharacter.id,
+      ...(mode === 'multiplayer' && previousPlayer2
+        ? { player2Name: previousPlayer2.name, player2Char: previousPlayer2.characterId }
+        : {}),
     });
     setPlayerMirror({ ...engine.players[0] });
     setTimeRemainingMirror(engine.timeRemaining);
@@ -231,10 +242,12 @@ export default function App() {
         setTimeRemainingMirror(engine.timeRemaining);
 
         // Check victory or game over conditions
-        if (engine.isVictory && status === 'playing') {
-          handleVictory();
-        } else if (engine.isGameOver && status === 'playing') {
-          handleGameOver();
+        if (engine.isVictory && status === 'playing' && !endHandledRef.current) {
+          endHandledRef.current = true;
+          void handleVictory();
+        } else if (engine.isGameOver && status === 'playing' && !endHandledRef.current) {
+          endHandledRef.current = true;
+          void handleGameOver();
         }
       }
 
