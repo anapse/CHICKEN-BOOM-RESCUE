@@ -25,6 +25,8 @@ jobs:
         run: npm ci || npm install --legacy-peer-deps
       - name: TypeScript validation
         run: npm run lint
+      - name: Map generation regression check
+        run: npm run check:map
       - name: Production build
         run: npm run build
       - name: PNG sprite inventory summary
