@@ -836,7 +836,9 @@ export class GameRenderer {
         ctx.translate(-(x + TILE_SIZE / 2), -(y + TILE_SIZE / 2));
       }
       // Use the provided fox animation sheet, not the large reference illustration.
-      const directionRow: Record<string, number> = { DOWN: 0, LEFT: 1, RIGHT: 2, UP: 3 };
+      // Verified from the uploaded fox sheet: row 1 front/down, row 2 back/up,
+      // row 3 profile facing left, row 4 profile facing right.
+      const directionRow: Record<string, number> = { DOWN: 0, UP: 1, LEFT: 2, RIGHT: 3 };
       const direction = directionRow[enemy.direction] ?? 0;
       const walkFrame = SpriteManager.frameAt(this.animTimer, layout.columns, 7);
       const frame = direction * layout.columns + walkFrame;
@@ -869,8 +871,9 @@ export class GameRenderer {
       ctx.globalAlpha = 0.4;
     }
     if (player.isGhost) ctx.globalAlpha *= 0.45;
-    // Four directional rows: down, left, right, up. Animate within the selected row.
-    const directionRow: Record<string, number> = { DOWN: 0, LEFT: 1, RIGHT: 2, UP: 3 };
+    // Verified on all three uploaded chicken sheets: front/down, back/up,
+    // profile facing left, profile facing right. Do not reuse the wrong row order.
+    const directionRow: Record<string, number> = { DOWN: 0, UP: 1, LEFT: 2, RIGHT: 3 };
     const direction = directionRow[player.direction] ?? 0;
     const walkFrame = player.isMoving
       ? SpriteManager.frameAt(this.animTimer, layout.columns, 9)
