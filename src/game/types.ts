@@ -40,6 +40,7 @@ export interface PlayerState {
   maxLives: number;    // 5
   score: number;
   coins: number;
+  inventory: PickupType[];
   hasKey: boolean;
   speedMultiplier: number;
   speedBoostTimer: number;
