@@ -226,6 +226,7 @@ export class GameEngine {
       ownerId: player.id,
       range: player.bombRange,
       isRemote,
+      bombType: player.bombType,
       timer: BOMB_FUSE_SECONDS,
       detonated: false,
       pulsate: 0,
