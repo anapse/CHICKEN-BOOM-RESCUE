@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, Key, Pause, Volume, Volume1, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Pause, Volume, Volume1, Volume2, VolumeX } from 'lucide-react';
 import { SoundVolumeLevel } from '../audio/soundManager';
 import { CHARACTERS } from '../game/constants';
 import { SPRITE_ASSETS } from '../game/spriteAssets';
@@ -23,114 +23,85 @@ export const HUD: React.FC<HUDProps> = ({
   onPause,
 }) => {
   const charConfig = CHARACTERS.find((c) => c.id === player.characterId) || CHARACTERS[0];
-
-  // Format timer MM:SS
   const mins = Math.floor(timeRemaining / 60);
   const secs = Math.floor(timeRemaining % 60);
   const timeFormatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
   const isTimeCritical = timeRemaining < 45;
+  const characterSrc = player.characterId === 'rambo_hembra'
+    ? SPRITE_ASSETS.pollitaRambo.src
+    : player.characterId === 'exploradora'
+      ? SPRITE_ASSETS.gallinitaExploradora.src
+      : SPRITE_ASSETS.pollitoRambo.src;
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-1.5 flex flex-col gap-1 overflow-hidden">
-      {/* Top Bar Container */}
-      <div className="flex items-center justify-between gap-1 max-w-full mx-auto w-full min-w-0 pointer-events-auto">
-        {/* Left: Player Profile & Hearts */}
-        <div className="flex items-center gap-1.5 min-w-0 max-w-[42%] bg-black/60 backdrop-blur-md rounded-2xl px-1.5 py-1 border-2 border-amber-600/60 shadow-lg">
-          {/* Avatar Icon */}
+    <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-1.5 overflow-hidden">
+      <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.85fr)_32px] items-center gap-1 w-full min-w-0 pointer-events-auto">
+        {/* Panel 1: character portrait and remaining lives */}
+        <div className="flex min-w-0 items-center gap-1.5 rounded-xl border-2 border-amber-600/70 bg-black/75 px-1.5 py-1 shadow-lg">
           <div
-            className="relative w-8 h-8 shrink-0 rounded-xl bg-gradient-to-b from-amber-400 to-amber-600 shadow border border-amber-300 overflow-hidden"
+            className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-amber-300 bg-amber-500"
             aria-label={charConfig.name}
             title={charConfig.name}
           >
             <div
               className="absolute inset-0"
               style={{
-                backgroundImage: `url("${player.characterId === 'rambo_hembra' ? SPRITE_ASSETS.pollitaRambo.src : player.characterId === 'exploradora' ? SPRITE_ASSETS.gallinitaExploradora.src : SPRITE_ASSETS.pollitoRambo.src}")`,
+                backgroundImage: `url("${characterSrc}")`,
                 backgroundSize: '400% 400%',
                 backgroundPosition: '0% 0%',
                 backgroundRepeat: 'no-repeat',
                 imageRendering: 'pixelated',
               }}
             />
-            {player.hasShield && (
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border border-white" />
-            )}
-            {player.isGhost && (
-              <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-purple-500 rounded-full border border-white" />
-            )}
+            {player.hasShield && <span className="absolute right-0 top-0 h-2 w-2 rounded-full border border-white bg-blue-500" />}
+            {player.isGhost && <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border border-white bg-purple-500" />}
           </div>
-
-          {/* Hearts & Player Name */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-black text-amber-200 tracking-wider truncate max-w-[62px] leading-tight">
-              {player.name || charConfig.name}
+          <div className="flex min-w-0 flex-col">
+            <span className="truncate text-[10px] font-black leading-tight text-amber-200">{player.name || charConfig.name}</span>
+            <span className="flex items-center gap-1 text-[11px] font-black leading-none text-white">
+              <Heart size={13} className="shrink-0 fill-red-500 text-red-500" />
+              <span>x{player.lives}</span>
             </span>
-            <div className="flex items-center gap-1 mt-0.5 text-red-400">
-              <Heart size={13} className="fill-red-500 shrink-0" />
-              <span className="text-[10px] leading-none font-black text-white">x{player.lives}</span>
-            </div>
           </div>
         </div>
 
-        {/* Center: Stylized Timer & Level */}
-        <div className="flex shrink-0 flex-col items-center bg-black/70 backdrop-blur-md px-2 py-1 rounded-2xl border-2 border-amber-500/80 shadow-xl">
-          <span className="text-[10px] uppercase font-black text-amber-300 tracking-wider">
-            NIVEL {currentLevel}
-          </span>
-          <span
-            className={`font-['Titan_One',sans-serif] text-lg tracking-wider leading-tight ${
-              isTimeCritical ? 'text-red-400 animate-ping' : 'text-yellow-300'
-            }`}
-          >
+        {/* Panel 2: timer and level */}
+        <div className="flex min-w-0 flex-col items-center rounded-xl border-2 border-amber-500/80 bg-black/75 px-1 py-1 shadow-lg">
+          <span className="truncate text-[9px] font-black uppercase leading-tight tracking-wide text-amber-300">NIVEL {currentLevel}</span>
+          <span className={`font-['Titan_One',sans-serif] text-base font-black leading-tight tracking-tight ${isTimeCritical ? 'animate-pulse text-red-400' : 'text-yellow-300'}`}>
             {timeFormatted}
           </span>
         </div>
 
-        {/* Right: compact key, sound and pause controls */}
-        <div className="flex shrink-0 items-center gap-1">
-          {/* Golden Key Indicator */}
-          <div
-            className={`w-8 h-8 rounded-xl flex items-center justify-center border-2 transition-all ${
-              player.hasKey
-                ? 'bg-gradient-to-b from-yellow-300 to-amber-500 border-yellow-200 shadow-[0_0_12px_rgba(250,204,21,0.9)] animate-bounce'
-                : 'bg-black/50 border-zinc-700 opacity-40'
-            }`}
-            title={player.hasKey ? '¡Tienes la Llave de Oro!' : 'Busca la Llave en las Cajas'}
-          >
-            <Key size={18} className={player.hasKey ? 'text-amber-950 fill-amber-950' : 'text-zinc-400'} />
-          </div>
+        {/* Panel 3: score is the single points/currency counter */}
+        <div className="flex min-w-0 flex-col items-center rounded-xl border-2 border-amber-600/70 bg-amber-950/90 px-1 py-1 shadow-lg">
+          <span className="text-[9px] font-black leading-tight text-amber-300">SCORE</span>
+          <span className="w-full truncate text-center text-sm font-black leading-tight tabular-nums text-white">{player.score}</span>
+        </div>
 
-          {/* Sound Button with 4 states */}
-          <button
-            onClick={onCycleVolume}
-            className="w-8 h-8 shrink-0 rounded-xl bg-black/60 hover:bg-black/80 border-2 border-amber-500/60 flex items-center justify-center text-amber-300 active:scale-95 transition-transform"
-            title={`Volumen: ${volumeLevel}%`}
-          >
-            {volumeLevel === 100 && <Volume2 size={18} />}
-            {volumeLevel === 50 && <Volume1 size={18} />}
-            {volumeLevel === 25 && <Volume size={18} />}
-            {volumeLevel === 0 && <VolumeX size={18} className="text-red-400" />}
-          </button>
-
-          {/* Pause Button */}
+        {/* Panel 4: vertically stacked pause and sound buttons */}
+        <div className="flex w-8 shrink-0 flex-col items-center gap-1">
           <button
             onClick={onPause}
-            className="w-8 h-8 shrink-0 rounded-xl bg-amber-600 hover:bg-amber-500 border-2 border-amber-300 flex items-center justify-center text-white active:scale-95 transition-transform shadow-md"
-            title="Pausar Partida"
+            className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-amber-300 bg-amber-600 text-white shadow active:scale-95"
+            title="Pausar partida"
+            aria-label="Pausar partida"
           >
-            <Pause size={18} />
+            <Pause size={16} />
+          </button>
+          <button
+            onClick={onCycleVolume}
+            className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-amber-500/60 bg-black/75 text-amber-300 shadow active:scale-95"
+            title={`Volumen: ${volumeLevel}%`}
+            aria-label="Cambiar volumen"
+          >
+            {volumeLevel === 100 && <Volume2 size={16} />}
+            {volumeLevel === 50 && <Volume1 size={16} />}
+            {volumeLevel === 25 && <Volume size={16} />}
+            {volumeLevel === 0 && <VolumeX size={16} className="text-red-400" />}
           </button>
         </div>
       </div>
-
-      {/* Single score counter: coins and score are the same currency */}
-      <div className="flex items-center justify-between max-w-full mx-auto w-full px-1 pointer-events-auto">
-        <div className="bg-amber-950/90 backdrop-blur-sm border border-amber-600/70 px-2.5 py-0.5 rounded-full text-[11px] font-black text-amber-300 flex items-center gap-1 shadow">
-          <span>SCORE</span>
-          <span className="text-white text-xs tabular-nums">{player.score}</span>
-        </div>
-      </div>
-div>
     </header>
   );
 };
