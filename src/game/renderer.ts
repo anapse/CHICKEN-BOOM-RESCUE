@@ -780,11 +780,15 @@ export class GameRenderer {
       ? SpriteManager.frameAt(this.animTimer, layout.columns, 9)
       : 0;
     const frame = direction * layout.columns + walkFrame;
+    // Pollita's source sheet has less transparent padding than Pollito Rambo,
+    // so use a per-sheet visual scale to keep both characters the same apparent size.
+    const characterScale = player.characterId === 'rambo_hembra' ? 1.35 : 1.7;
+    const renderSize = TILE_SIZE * characterScale;
     spriteManager.draw(ctx, characterPath, {
-      x: x - TILE_SIZE * 0.35,
-      y: y - TILE_SIZE * 0.45,
-      width: TILE_SIZE * 1.7,
-      height: TILE_SIZE * 1.7,
+      x: x + (TILE_SIZE - renderSize) / 2,
+      y: y + TILE_SIZE - renderSize,
+      width: renderSize,
+      height: renderSize,
       frame,
       layout,
     });
