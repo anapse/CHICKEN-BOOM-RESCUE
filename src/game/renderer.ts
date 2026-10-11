@@ -583,7 +583,7 @@ export class GameRenderer {
 
       ctx.save();
       ctx.translate(bx, by);
-      ctx.scale(scale, scale);
+      ctx.scale(scale * 2, scale * 2);
 
       // Egg shadow
       ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
