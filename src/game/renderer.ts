@@ -64,21 +64,34 @@ export class GameRenderer {
     ctx.save();
     ctx.clearRect(0, 0, viewportWidth, viewportHeight);
 
-    // Draw the farm background across the complete viewport first. The playable
-    // map is inset so grass/vegetation remains visible outside the border walls.
-    this.renderGround(GRID_COLS, GRID_ROWS);
-    const sidePadding = TILE_SIZE; // one brick width on each side
-    const topPadding = 88; // reserve the HUD band so it never covers the first map row
-    const bottomPadding = TILE_SIZE; // one brick height below the map
-    const playHeight = Math.max(1, viewportHeight - topPadding - bottomPadding);
+    // Background fills the whole screen, including behind the HUD and the
+    // lower power-up area. It is deliberately not translated with the camera.
+    this.renderGround(
+      Math.ceil(viewportWidth / TILE_SIZE),
+      Math.ceil(viewportHeight / TILE_SIZE),
+    );
 
-    // Clip the actual game map to its inset play area. Camera motion applies to
-    // world objects only; the background stays full-width behind the margins.
+    // Reserve space for the top HUD and the lower controls without cutting off
+    // the perimeter. Scale the complete map uniformly so all 17 rows fit.
+    const sidePadding = 12;
+    const topPadding = 88;
+    const bottomPadding = 72;
+    const playWidth = Math.max(1, viewportWidth - sidePadding * 2);
+    const playHeight = Math.max(1, viewportHeight - topPadding - bottomPadding);
+    const mapWidth = GRID_COLS * TILE_SIZE;
+    const mapHeight = GRID_ROWS * TILE_SIZE;
+    const mapScale = Math.min(playWidth / mapWidth, playHeight / mapHeight);
+    const scaledMapWidth = mapWidth * mapScale;
+    const mapLeft = sidePadding + (playWidth - scaledMapWidth) / 2;
+
+    // Keep the entire map, its walls, collisions, pickups and characters in
+    // the same coordinate system. Only the renderer's presentation is scaled.
     ctx.save();
     ctx.beginPath();
-    ctx.rect(sidePadding, topPadding, Math.max(1, viewportWidth - sidePadding * 2), playHeight);
+    ctx.rect(sidePadding, topPadding, playWidth, playHeight);
     ctx.clip();
-    ctx.translate(sidePadding - cameraX, topPadding);
+    ctx.translate(mapLeft - cameraX * mapScale, topPadding);
+    ctx.scale(mapScale, mapScale);
 
     // 2. Render Grid Cells (Walls, Crates, Cages, Chests)
     this.renderGrid(grid, isCageUnlocked, hasKey);
