@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { soundManager, SoundVolumeLevel } from './audio/soundManager';
 import { AdminDashboard } from './components/AdminDashboard';
-import { BottomPowerUps } from './components/BottomPowerUps';
 import { CharacterSelectModal } from './components/CharacterSelectModal';
 import { ContactModal } from './components/ContactModal';
 import { GameOverModal } from './components/GameOverModal';
@@ -417,20 +416,6 @@ export default function App() {
           />
         )}
 
-        {/* =========================================
-            LAYER 3: REACT BOTTOM BAR & CONTROLS (BOTTOM 10%)
-            ========================================= */}
-        {playerMirror && status === 'playing' && (
-          <BottomPowerUps
-            player={playerMirror}
-            hasActiveRemoteBomb={engineRef.current.bombs.some(
-              (b) => b.ownerId === playerMirror.id && b.isRemote && !b.detonated
-            )}
-            onMove={(dir) => engineRef.current.movePlayer('p1', dir)}
-            onPlaceBomb={() => engineRef.current.placeBomb('p1')}
-            onTriggerRemote={() => engineRef.current.triggerRemoteBomb('p1')}
-          />
-        )}
 
         {/* =========================================
             LAYER 4: START SCREEN OVERLAY
