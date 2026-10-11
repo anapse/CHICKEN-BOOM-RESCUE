@@ -2,6 +2,7 @@ import React from 'react';
 import { Heart, Key, Pause, Volume, Volume1, Volume2, VolumeX } from 'lucide-react';
 import { SoundVolumeLevel } from '../audio/soundManager';
 import { CHARACTERS } from '../game/constants';
+import { SPRITE_ASSETS } from '../game/spriteAssets';
 import { PlayerState } from '../game/types';
 
 interface HUDProps {
@@ -36,8 +37,21 @@ export const HUD: React.FC<HUDProps> = ({
         {/* Left: Player Profile & Hearts */}
         <div className="flex items-center gap-1.5 min-w-0 max-w-[42%] bg-black/60 backdrop-blur-md rounded-2xl px-1.5 py-1 border-2 border-amber-600/60 shadow-lg">
           {/* Avatar Icon */}
-          <div className="relative w-8 h-8 shrink-0 rounded-xl bg-gradient-to-b from-amber-400 to-amber-600 flex items-center justify-center text-xl shadow border border-amber-300">
-            <span>{charConfig.avatarEmoji}</span>
+          <div
+            className="relative w-8 h-8 shrink-0 rounded-xl bg-gradient-to-b from-amber-400 to-amber-600 shadow border border-amber-300 overflow-hidden"
+            aria-label={charConfig.name}
+            title={charConfig.name}
+          >
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `url("${player.characterId === 'rambo_hembra' ? SPRITE_ASSETS.pollitaRambo.src : player.characterId === 'exploradora' ? SPRITE_ASSETS.gallinitaExploradora.src : SPRITE_ASSETS.pollitoRambo.src}")`,
+                backgroundSize: '400% 400%',
+                backgroundPosition: '0% 0%',
+                backgroundRepeat: 'no-repeat',
+                imageRendering: 'pixelated',
+              }}
+            />
             {player.hasShield && (
               <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border border-white" />
             )}
