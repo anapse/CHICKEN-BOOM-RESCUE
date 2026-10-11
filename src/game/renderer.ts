@@ -64,11 +64,21 @@ export class GameRenderer {
     ctx.save();
     ctx.clearRect(0, 0, viewportWidth, viewportHeight);
 
-    // Camera transform: shift by cameraX
-    ctx.translate(-cameraX, 0);
-
-    // 1. Render Ground Background
+    // Draw the farm background across the complete viewport first. The playable
+    // map is inset so grass/vegetation remains visible outside the border walls.
     this.renderGround(GRID_COLS, GRID_ROWS);
+    const sidePadding = TILE_SIZE; // one brick width on each side
+    const topPadding = 88; // reserve the HUD band so it never covers the first map row
+    const bottomPadding = TILE_SIZE; // one brick height below the map
+    const playHeight = Math.max(1, viewportHeight - topPadding - bottomPadding);
+
+    // Clip the actual game map to its inset play area. Camera motion applies to
+    // world objects only; the background stays full-width behind the margins.
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(sidePadding, topPadding, Math.max(1, viewportWidth - sidePadding * 2), playHeight);
+    ctx.clip();
+    ctx.translate(sidePadding - cameraX, topPadding);
 
     // 2. Render Grid Cells (Walls, Crates, Cages, Chests)
     this.renderGrid(grid, isCageUnlocked, hasKey);
@@ -95,6 +105,7 @@ export class GameRenderer {
 
     // 9. Render Floating Texts (+100, +500, KEY!)
     this.renderFloatingTexts(floatingTexts);
+    ctx.restore();
 
     ctx.restore();
   }
