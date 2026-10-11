@@ -183,7 +183,7 @@ export class GameRenderer {
         const py = y * TILE_SIZE;
 
         if (cell === 'BRICK_WALL') {
-          this.drawBrickWall(px, py, x);
+          this.drawBrickWall(px, py, x, y, grid[0].length);
         } else if (cell === 'ROCK_WALL') {
           this.drawRockWall(px, py, x, y);
         } else if (cell === 'CRATE') {
@@ -199,17 +199,23 @@ export class GameRenderer {
 
   // Shared wood/stone atlas: left half is the wooden crate, right half is stone wall.
   // The supplied PNG is 1774×887, split into two 887×887 panels.
-  private drawBrickWall(x: number, y: number, gridX: number) {
+  private drawBrickWall(x: number, y: number, gridX: number, gridY: number, gridWidth: number) {
     const ctx = this.ctx;
     const sprite = getAssetImage(SPRITE_ASSETS.woodStoneTiles.src);
     if (!sprite || !sprite.complete || sprite.naturalWidth <= 0) return;
 
-    // Only the outermost left border wall is rotated 90° clockwise.
-    // Top/bottom/right border walls and every interior stone stay unrotated.
-    if (gridX === 0) {
+    // Perimeter-only orientation:
+    // left border = 90° clockwise; right border = 90° counter-clockwise;
+    // top border = 180°; bottom border = original orientation.
+    let rotation = 0;
+    if (gridX === 0) rotation = Math.PI / 2;
+    else if (gridX === gridWidth - 1) rotation = -Math.PI / 2;
+    else if (gridY === 0) rotation = Math.PI;
+
+    if (rotation !== 0) {
       ctx.save();
       ctx.translate(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
-      ctx.rotate(Math.PI / 2);
+      ctx.rotate(rotation);
       const drawSize = TILE_SIZE * 1.42;
       ctx.drawImage(
         sprite,
