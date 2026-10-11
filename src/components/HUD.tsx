@@ -111,8 +111,15 @@ export const HUD: React.FC<HUDProps> = ({
         <span className="absolute bottom-0 right-0 rounded-tl bg-black/85 px-1 text-[9px] font-black leading-tight text-amber-200">∞</span>
       </div>
       <div className="mx-0.5 h-8 w-px shrink-0 bg-amber-500/70" />
-      {Array.from({ length: 6 }).map((_, index) => {
-        const item = player.inventory[index];
+      {Array.from({ length: 6 }).map((_, slotIndex) => {
+        // Display one slot per power-up type; duplicates become a quantity badge.
+        const item = player.inventory.find((candidate, index) =>
+          player.inventory.indexOf(candidate) === index &&
+          player.inventory.slice(0, index + 1).filter((stored) => stored === candidate).length > 0
+        );
+        const uniqueItems = player.inventory.filter((candidate, index) => player.inventory.indexOf(candidate) === index);
+        const visibleItem = uniqueItems[slotIndex];
+        const itemIndex = visibleItem ? player.inventory.indexOf(visibleItem) : -1;
         const visuals: Record<string, { col: number; row: number; label: string }> = {
           HEART: { col: 0, row: 2, label: 'Corazón: +1 vida' },
           POWERUP_DOUBLE_EGG: { col: 1, row: 0, label: 'Huevo doble' },
@@ -122,22 +129,22 @@ export const HUD: React.FC<HUDProps> = ({
           POWERUP_SHIELD: { col: 1, row: 1, label: 'Escudo' },
           POWERUP_REMOTE: { col: 3, row: 0, label: 'Detonador remoto' },
         };
-        const visual = item ? visuals[item] : undefined;
-        const quantity = item ? player.inventory.filter((stored) => stored === item).length : 0;
+        const visual = visibleItem ? visuals[visibleItem] : undefined;
+        const quantity = visibleItem ? player.inventory.filter((stored) => stored === visibleItem).length : 0;
         const colPosition = visual ? (visual.col / 3) * 100 : 0;
         const rowPosition = visual ? (visual.row / 2) * 100 : 0;
         return (
           <button
-            key={index}
-            onClick={() => item && onUseInventorySlot(index)}
-            disabled={!item || item === 'KEY' || item === 'COIN' || item === 'NONE'}
-            title={visual?.label || (item === 'KEY' ? 'Llave: se usa automáticamente en la jaula' : 'Espacio vacío')}
-            aria-label={visual?.label || (item === 'KEY' ? 'Llave de la jaula' : 'Espacio vacío')}
-            className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border-2 ${item ? 'border-amber-400 bg-amber-900/90 active:scale-95' : 'border-white/20 bg-white/5 opacity-70'}`}
+            key={slotIndex}
+            onClick={() => itemIndex >= 0 && onUseInventorySlot(itemIndex)}
+            disabled={!visibleItem || visibleItem === 'KEY' || visibleItem === 'COIN' || visibleItem === 'NONE'}
+            title={visual?.label || (visibleItem === 'KEY' ? 'Llave: se usa automáticamente en la jaula' : 'Espacio vacío')}
+            aria-label={visual?.label || (visibleItem === 'KEY' ? 'Llave de la jaula' : 'Espacio vacío')}
+            className={`relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border-2 ${visibleItem ? 'border-amber-400 bg-amber-900/90 active:scale-95' : 'border-white/20 bg-white/5 opacity-70'}`}
           >
             {visual && <span className="absolute inset-0" style={{ backgroundImage: `url("${SPRITE_ASSETS.iconSheet.src}")`, backgroundSize: '400% 300%', backgroundPosition: `${colPosition}% ${rowPosition}%`, backgroundRepeat: 'no-repeat' }} />}
-            {item && quantity > 0 && <span className="absolute right-0 top-0 z-10 min-w-3 rounded-bl bg-black/90 px-1 text-[9px] font-black leading-tight text-white">{quantity}</span>}
-            {!item && <span className="absolute inset-0 flex items-center justify-center text-sm text-white/20">·</span>}
+            {visibleItem && quantity > 1 && <span className="absolute right-0 top-0 z-10 min-w-3 rounded-bl bg-black/95 px-1 text-[10px] font-black leading-tight text-white">{quantity}</span>}
+            {!visibleItem && <span className="absolute inset-0 flex items-center justify-center text-sm text-white/20">·</span>}
           </button>
         );
       })}
