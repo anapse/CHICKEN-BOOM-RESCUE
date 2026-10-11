@@ -183,7 +183,7 @@ export class GameRenderer {
         const py = y * TILE_SIZE;
 
         if (cell === 'BRICK_WALL') {
-          this.drawBrickWall(px, py);
+          this.drawBrickWall(px, py, x);
         } else if (cell === 'ROCK_WALL') {
           this.drawRockWall(px, py, x, y);
         } else if (cell === 'CRATE') {
@@ -199,30 +199,39 @@ export class GameRenderer {
 
   // Shared wood/stone atlas: left half is the wooden crate, right half is stone wall.
   // The supplied PNG is 1774×887, split into two 887×887 panels.
-  private drawBrickWall(x: number, y: number) {
-    spriteManager.draw(this.ctx, SPRITE_ASSETS.woodStoneTiles.src, {
+  private drawBrickWall(x: number, y: number, gridX: number) {
+    const ctx = this.ctx;
+    const sprite = getAssetImage(SPRITE_ASSETS.woodStoneTiles.src);
+    if (!sprite || !sprite.complete || sprite.naturalWidth <= 0) return;
+
+    // Only the outermost left border wall is rotated 90° clockwise.
+    // Top/bottom/right border walls and every interior stone stay unrotated.
+    if (gridX === 0) {
+      ctx.save();
+      ctx.translate(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
+      ctx.rotate(Math.PI / 2);
+      const drawSize = TILE_SIZE * 1.42;
+      ctx.drawImage(
+        sprite,
+        887, 0, 887, 887,
+        -drawSize / 2, -drawSize / 2, drawSize, drawSize,
+      );
+      ctx.restore();
+      return;
+    }
+
+    spriteManager.draw(ctx, SPRITE_ASSETS.woodStoneTiles.src, {
       x, y, width: TILE_SIZE, height: TILE_SIZE,
       sourceRect: { x: 887, y: 0, width: 887, height: 887 },
     });
   }
 
   private drawRockWall(x: number, y: number, _gx: number, _gy: number) {
-    const ctx = this.ctx;
-    const sprite = getAssetImage(SPRITE_ASSETS.woodStoneTiles.src);
-    if (!sprite || !sprite.complete || sprite.naturalWidth <= 0) return;
-
-    // Rotate only the left-side wall stones 90° clockwise, as requested.
-    // Wooden crates and other tiles are unaffected.
-    ctx.save();
-    ctx.translate(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
-    ctx.rotate(Math.PI / 2);
-    const drawSize = TILE_SIZE * 1.42;
-    ctx.drawImage(
-      sprite,
-      887, 0, 887, 887,
-      -drawSize / 2, -drawSize / 2, drawSize, drawSize,
-    );
-    ctx.restore();
+    // Interior stone obstacles keep their original orientation.
+    spriteManager.draw(this.ctx, SPRITE_ASSETS.woodStoneTiles.src, {
+      x, y, width: TILE_SIZE, height: TILE_SIZE,
+      sourceRect: { x: 887, y: 0, width: 887, height: 887 },
+    });
   }
 
   private drawWoodenCrate(x: number, y: number) {
