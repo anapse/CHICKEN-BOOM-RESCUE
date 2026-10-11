@@ -93,6 +93,7 @@ export class GameEngine {
       maxLives: 5,
       score: 0,
       coins: 0,
+      inventory: [],
       hasKey: false,
       speedMultiplier: 1.0,
 
@@ -127,6 +128,7 @@ export class GameEngine {
         maxLives: 5,
         score: 0,
         coins: 0,
+        inventory: [],
         hasKey: false,
         speedMultiplier: 1.0,
 
@@ -645,80 +647,65 @@ export class GameEngine {
   }
 
   private applyPickup(player: PlayerState, type: PickupType) {
-    switch (type) {
-      case 'KEY':
-        player.hasKey = true;
-        player.score += 500;
-        soundManager.playKeyFound();
-        this.addFloatingText('¡LLAVE DE ORO!', player.gridX, player.gridY, '#facc15');
-        break;
-
-      case 'COIN':
-        player.coins++;
-        player.score += 100;
-        soundManager.playCollectCoin();
-        this.addFloatingText('+100 MONEDA', player.gridX, player.gridY, '#fde047');
-        break;
-
-      case 'HEART':
-        if (player.lives < player.maxLives) {
-          player.lives++;
-        }
-        player.score += 50;
-        soundManager.playCollectPowerUp();
-        this.addFloatingText('+1 VIDA', player.gridX, player.gridY, '#ef4444');
-        break;
-
-      case 'POWERUP_DOUBLE_EGG':
-        player.bombRange = 2;
-        player.bombStock += 5;
-        player.bombType = 'DOUBLE';
-        player.score += 150;
-        soundManager.playCollectPowerUp();
-        this.addFloatingText('DOBLE HUEVO (x2)', player.gridX, player.gridY, '#ea580c');
-        break;
-
-      case 'POWERUP_TRIPLE_EGG':
-        player.bombRange = 3;
-        player.bombStock += 3;
-        player.bombType = 'TRIPLE';
-        player.score += 200;
-        soundManager.playCollectPowerUp();
-        this.addFloatingText('TRIPLE HUEVO (x3)', player.gridX, player.gridY, '#ea580c');
-        break;
-
-      case 'POWERUP_SPEED':
-        player.speedMultiplier = 1.35;
-        player.speedBoostTimer = SPEED_BOOST_DURATION;
-        player.score += 150;
-        soundManager.playCollectPowerUp();
-        this.addFloatingText('¡VELOCIDAD!', player.gridX, player.gridY, '#3b82f6');
-        break;
-
-      case 'POWERUP_SHIELD':
-        player.hasShield = true;
-        player.shieldTimer = SHIELD_DURATION;
-        player.score += 150;
-        soundManager.playCollectPowerUp();
-        this.addFloatingText('¡ESCUDO!', player.gridX, player.gridY, '#2563eb');
-        break;
-
-      case 'POWERUP_GHOST':
-        player.isGhost = true;
-        player.ghostTimer = GHOST_DURATION;
-        player.score += 150;
-        soundManager.playCollectPowerUp();
-        this.addFloatingText('¡FANTASMA!', player.gridX, player.gridY, '#8b5cf6');
-        break;
-
-      case 'POWERUP_REMOTE':
-        player.bombType = 'REMOTE';
-        player.bombStock += 4;
-        player.score += 150;
-        soundManager.playCollectPowerUp();
-        this.addFloatingText('¡DETONADOR REMOTO!', player.gridX, player.gridY, '#16a34a');
-        break;
+    if (type === 'KEY') {
+      player.hasKey = true;
+      player.score += 500;
+      soundManager.playKeyFound();
+      this.addFloatingText('¡LLAVE DE ORO!', player.gridX, player.gridY, '#facc15');
+      return;
     }
+    if (type === 'COIN') {
+      player.coins++;
+      player.score += 100;
+      soundManager.playCollectCoin();
+      this.addFloatingText('+100 SCORE', player.gridX, player.gridY, '#fde047');
+      return;
+    }
+    if (type === 'NONE') return;
+    if (player.inventory.length >= 6) {
+      this.addFloatingText('INVENTARIO LLENO', player.gridX, player.gridY, '#ef4444');
+      return;
+    }
+    player.inventory.push(type);
+    soundManager.playCollectPowerUp();
+    this.addFloatingText('OBJETO GUARDADO', player.gridX, player.gridY, '#facc15');
+  }
+
+  /** Activate one stored power-up. Normal eggs remain unlimited and are not stored. */
+  public useInventorySlot(playerId: string, slotIndex: number) {
+    const player = this.players.find((p) => p.id === playerId);
+    if (!player || player.isDead || slotIndex < 0 || slotIndex >= player.inventory.length) return;
+    const item = player.inventory[slotIndex];
+    if (item === 'HEART' && player.lives >= player.maxLives) return;
+    player.inventory.splice(slotIndex, 1);
+    switch (item) {
+      case 'HEART':
+        player.lives = Math.min(player.maxLives, player.lives + 1);
+        break;
+      case 'POWERUP_DOUBLE_EGG':
+        player.bombRange = 2; player.bombStock = 5; player.bombType = 'DOUBLE';
+        break;
+      case 'POWERUP_TRIPLE_EGG':
+        player.bombRange = 3; player.bombStock = 3; player.bombType = 'TRIPLE';
+        break;
+      case 'POWERUP_REMOTE':
+        player.bombStock = 4; player.bombType = 'REMOTE';
+        break;
+      case 'POWERUP_SPEED':
+        player.speedMultiplier = 1.35; player.speedBoostTimer = SPEED_BOOST_DURATION;
+        break;
+      case 'POWERUP_SHIELD':
+        player.hasShield = true; player.shieldTimer = SHIELD_DURATION;
+        break;
+      case 'POWERUP_GHOST':
+        player.isGhost = true; player.ghostTimer = GHOST_DURATION;
+        break;
+      default:
+        player.inventory.splice(slotIndex, 0, item);
+        return;
+    }
+    soundManager.playCollectPowerUp();
+    this.addFloatingText('¡POWER-UP ACTIVADO!', player.gridX, player.gridY, '#facc15');
   }
 
   private addFloatingText(text: string, gx: number, gy: number, color: string) {
