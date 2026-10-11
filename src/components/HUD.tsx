@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, HelpCircle, Key, Pause, Volume, Volume1, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Key, Pause, Volume, Volume1, Volume2, VolumeX } from 'lucide-react';
 import { SoundVolumeLevel } from '../audio/soundManager';
 import { CHARACTERS } from '../game/constants';
 import { PlayerState } from '../game/types';
@@ -11,7 +11,6 @@ interface HUDProps {
   volumeLevel: SoundVolumeLevel;
   onCycleVolume: () => void;
   onPause: () => void;
-  onOpenHowToPlay: () => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -21,7 +20,6 @@ export const HUD: React.FC<HUDProps> = ({
   volumeLevel,
   onCycleVolume,
   onPause,
-  onOpenHowToPlay,
 }) => {
   const charConfig = CHARACTERS.find((c) => c.id === player.characterId) || CHARACTERS[0];
 
@@ -32,13 +30,13 @@ export const HUD: React.FC<HUDProps> = ({
   const isTimeCritical = timeRemaining < 45;
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-2 sm:p-3 flex flex-col gap-1">
+    <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-1.5 flex flex-col gap-1 overflow-hidden">
       {/* Top Bar Container */}
-      <div className="flex items-center justify-between gap-2 max-w-lg mx-auto w-full pointer-events-auto">
+      <div className="flex items-center justify-between gap-1 max-w-full mx-auto w-full min-w-0 pointer-events-auto">
         {/* Left: Player Profile & Hearts */}
-        <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md rounded-2xl px-2.5 py-1.5 border-2 border-amber-600/60 shadow-lg">
+        <div className="flex items-center gap-1.5 min-w-0 max-w-[42%] bg-black/60 backdrop-blur-md rounded-2xl px-1.5 py-1 border-2 border-amber-600/60 shadow-lg">
           {/* Avatar Icon */}
-          <div className="relative w-9 h-9 rounded-xl bg-gradient-to-b from-amber-400 to-amber-600 flex items-center justify-center text-xl shadow border border-amber-300">
+          <div className="relative w-8 h-8 shrink-0 rounded-xl bg-gradient-to-b from-amber-400 to-amber-600 flex items-center justify-center text-xl shadow border border-amber-300">
             <span>{charConfig.avatarEmoji}</span>
             {player.hasShield && (
               <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-blue-500 rounded-full border border-white" />
@@ -50,14 +48,14 @@ export const HUD: React.FC<HUDProps> = ({
 
           {/* Hearts & Player Name */}
           <div className="flex flex-col">
-            <span className="text-[11px] font-black text-amber-200 tracking-wider truncate max-w-[85px] leading-tight">
+            <span className="text-[10px] font-black text-amber-200 tracking-wider truncate max-w-[62px] leading-tight">
               {player.name || charConfig.name}
             </span>
             <div className="flex items-center gap-1 mt-0.5">
               {Array.from({ length: player.maxLives }).map((_, i) => (
                 <Heart
                   key={i}
-                  size={14}
+                  size={12}
                   className={`transition-transform ${
                     i < player.lives
                       ? 'text-red-500 fill-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.7)] animate-pulse'
@@ -70,12 +68,12 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
 
         {/* Center: Stylized Timer & Level */}
-        <div className="flex flex-col items-center bg-black/70 backdrop-blur-md px-3.5 py-1 rounded-2xl border-2 border-amber-500/80 shadow-xl">
+        <div className="flex shrink-0 flex-col items-center bg-black/70 backdrop-blur-md px-2 py-1 rounded-2xl border-2 border-amber-500/80 shadow-xl">
           <span className="text-[10px] uppercase font-black text-amber-300 tracking-wider">
             NIVEL {currentLevel}
           </span>
           <span
-            className={`font-['Titan_One',sans-serif] text-xl tracking-wider leading-tight ${
+            className={`font-['Titan_One',sans-serif] text-lg tracking-wider leading-tight ${
               isTimeCritical ? 'text-red-400 animate-ping' : 'text-yellow-300'
             }`}
           >
@@ -83,11 +81,11 @@ export const HUD: React.FC<HUDProps> = ({
           </span>
         </div>
 
-        {/* Right: Key Badge & Action Controls (Sound, How to play, Pause) */}
-        <div className="flex items-center gap-1.5">
+        {/* Right: compact key, sound and pause controls */}
+        <div className="flex shrink-0 items-center gap-1">
           {/* Golden Key Indicator */}
           <div
-            className={`w-9 h-9 rounded-2xl flex items-center justify-center border-2 transition-all ${
+            className={`w-8 h-8 rounded-xl flex items-center justify-center border-2 transition-all ${
               player.hasKey
                 ? 'bg-gradient-to-b from-yellow-300 to-amber-500 border-yellow-200 shadow-[0_0_12px_rgba(250,204,21,0.9)] animate-bounce'
                 : 'bg-black/50 border-zinc-700 opacity-40'
@@ -100,7 +98,7 @@ export const HUD: React.FC<HUDProps> = ({
           {/* Sound Button with 4 states */}
           <button
             onClick={onCycleVolume}
-            className="w-9 h-9 rounded-2xl bg-black/60 hover:bg-black/80 border-2 border-amber-500/60 flex items-center justify-center text-amber-300 active:scale-95 transition-transform"
+            className="w-8 h-8 shrink-0 rounded-xl bg-black/60 hover:bg-black/80 border-2 border-amber-500/60 flex items-center justify-center text-amber-300 active:scale-95 transition-transform"
             title={`Volumen: ${volumeLevel}%`}
           >
             {volumeLevel === 100 && <Volume2 size={18} />}
@@ -109,19 +107,10 @@ export const HUD: React.FC<HUDProps> = ({
             {volumeLevel === 0 && <VolumeX size={18} className="text-red-400" />}
           </button>
 
-          {/* How to Play Button */}
-          <button
-            onClick={onOpenHowToPlay}
-            className="w-9 h-9 rounded-2xl bg-black/60 hover:bg-black/80 border-2 border-amber-500/60 flex items-center justify-center text-amber-300 active:scale-95 transition-transform"
-            title="Cómo Jugar"
-          >
-            <HelpCircle size={18} />
-          </button>
-
           {/* Pause Button */}
           <button
             onClick={onPause}
-            className="w-9 h-9 rounded-2xl bg-amber-600 hover:bg-amber-500 border-2 border-amber-300 flex items-center justify-center text-white active:scale-95 transition-transform shadow-md"
+            className="w-8 h-8 shrink-0 rounded-xl bg-amber-600 hover:bg-amber-500 border-2 border-amber-300 flex items-center justify-center text-white active:scale-95 transition-transform shadow-md"
             title="Pausar Partida"
           >
             <Pause size={18} />
@@ -130,7 +119,7 @@ export const HUD: React.FC<HUDProps> = ({
       </div>
 
       {/* Sub-bar: Score & Coins banner */}
-      <div className="flex items-center justify-between max-w-lg mx-auto w-full px-2 pointer-events-auto">
+      <div className="flex items-center justify-between max-w-full mx-auto w-full px-1 pointer-events-auto">
         <div className="bg-amber-950/80 backdrop-blur-sm border border-amber-700/60 px-2.5 py-0.5 rounded-full text-[11px] font-black text-amber-300 flex items-center gap-1 shadow">
           <span>SCORE:</span>
           <span className="text-white text-xs">{player.score}</span>
