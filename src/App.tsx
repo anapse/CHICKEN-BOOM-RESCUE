@@ -219,17 +219,23 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // Render at 75% internal resolution while preserving the full logical
+    // viewport and the same CSS display size. This reduces pixel work without
+    // changing world coordinates, sprite sizes, or collision geometry.
+    const renderScale = 0.75;
     if (!rendererRef.current) {
+      ctx.scale(renderScale, renderScale);
       rendererRef.current = new GameRenderer(ctx);
     }
 
     const engine = engineRef.current;
     const renderer = rendererRef.current;
 
-    const viewportW = 11 * TILE_SIZE; // 528px (1 screen width)
-    const viewportH = 17 * TILE_SIZE; // 816px (screen height)
+    const viewportW = 11 * TILE_SIZE;
+    const viewportH = 17 * TILE_SIZE;
 
     let isRunning = true;
+    let hudUpdateElapsed = 0;
 
     const gameLoop = (timestamp: number) => {
       if (!isRunning) return;
@@ -241,12 +247,18 @@ export default function App() {
       if (status === 'playing') {
         engine.update(deltaTime, viewportW, viewportH);
 
-        // Update mirrors for React HUD
-        // Freeze the displayed player snapshot when an ending is triggered.
-        // The victory handler will select the actual winner (including player 2).
-        if (!engine.isVictory && !engine.isGameOver && engine.players[0]) {
-          setPlayerMirror({ ...engine.players[0] });
-          setTimeRemainingMirror(engine.timeRemaining);
+        // The canvas runs every animation frame; React's HUD only needs
+        // refreshing 10 times per second. Avoiding per-frame React renders
+        // keeps larger sprites and tiles from making the game feel sluggish.
+        hudUpdateElapsed += deltaTime;
+        if (hudUpdateElapsed >= 0.1) {
+          hudUpdateElapsed %= 0.1;
+          // Freeze the displayed snapshot when an ending is triggered.
+          // The ending handler selects the actual winner (including player 2).
+          if (!engine.isVictory && !engine.isGameOver && engine.players[0]) {
+            setPlayerMirror({ ...engine.players[0] });
+            setTimeRemainingMirror(engine.timeRemaining);
+          }
         }
 
         // Check victory or game over conditions
@@ -381,8 +393,9 @@ export default function App() {
     return <SpriteAtlasInspector onClose={() => setStatus('menu')} />;
   }
 
-  const viewportW = 11 * TILE_SIZE; // 528px
-  const viewportH = 17 * TILE_SIZE; // 816px
+  const viewportW = 11 * TILE_SIZE;
+  const viewportH = 17 * TILE_SIZE;
+  const canvasRenderScale = 0.75;
 
   return (
     <main className="w-full h-screen h-[100dvh] flex items-center justify-center bg-stone-950 overflow-hidden select-none">
@@ -393,8 +406,8 @@ export default function App() {
             ========================================= */}
         <canvas
           ref={canvasRef}
-          width={viewportW}
-          height={viewportH}
+          width={Math.round(viewportW * canvasRenderScale)}
+          height={Math.round(viewportH * canvasRenderScale)}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           className="w-full h-full object-fill block bg-transparent"
