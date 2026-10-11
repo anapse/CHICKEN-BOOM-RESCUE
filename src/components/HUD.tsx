@@ -36,6 +36,7 @@ export const HUD: React.FC<HUDProps> = ({
       : SPRITE_ASSETS.pollitoRambo.src;
 
   return (
+    <>
     <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none p-1.5 overflow-hidden">
       <div className="grid grid-cols-[minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,0.85fr)_32px] items-center gap-1 w-full min-w-0 pointer-events-auto">
         {/* Panel 1: character portrait and remaining lives */}
@@ -104,5 +105,38 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
       </div>
     </header>
+    <div className="absolute bottom-2 left-1/2 z-30 flex max-w-[96%] -translate-x-1/2 items-center gap-1 rounded-xl border border-amber-600/70 bg-black/85 p-1.5 shadow-xl pointer-events-auto">
+      <div className="flex h-10 w-10 shrink-0 flex-col items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-950" title="Huevo normal ilimitado">
+        <span className="text-xl leading-none">🥚</span>
+        <span className="text-[8px] font-black leading-none text-amber-200">∞</span>
+      </div>
+      <div className="mx-0.5 h-8 w-px shrink-0 bg-amber-500/70" />
+      {Array.from({ length: 6 }).map((_, index) => {
+        const item = player.inventory[index];
+        const visuals: Record<string, { icon: string; label: string }> = {
+          HEART: { icon: '❤️', label: 'Corazón: +1 vida' },
+          POWERUP_DOUBLE_EGG: { icon: '🥚', label: 'Huevo doble' },
+          POWERUP_TRIPLE_EGG: { icon: '🐣', label: 'Huevo triple' },
+          POWERUP_SPEED: { icon: '⚡', label: 'Velocidad' },
+          POWERUP_GHOST: { icon: '👻', label: 'Fantasma' },
+          POWERUP_SHIELD: { icon: '🛡️', label: 'Escudo' },
+          POWERUP_REMOTE: { icon: '💣', label: 'Detonador remoto' },
+        };
+        const visual = item ? visuals[item] : undefined;
+        return (
+          <button
+            key={index}
+            onClick={() => item && onUseInventorySlot(index)}
+            disabled={!item}
+            title={visual?.label || 'Espacio vacío'}
+            aria-label={visual?.label || 'Espacio vacío'}
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border-2 text-xl ${item ? 'border-amber-400 bg-amber-900/90 active:scale-95' : 'border-white/20 bg-white/5 opacity-70'}`}
+          >
+            {visual?.icon || <span className="text-sm text-white/20">·</span>}
+          </button>
+        );
+      })}
+    </div>
+    </>
   );
 };
