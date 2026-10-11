@@ -667,6 +667,7 @@ export class GameEngine {
       this.addFloatingText('INVENTARIO LLENO', player.gridX, player.gridY, '#ef4444');
       return;
     }
+    // Keep one stored entry per collected item; duplicates are represented by the HUD quantity.
     player.inventory.push(type);
     soundManager.playCollectPowerUp();
     this.addFloatingText('OBJETO GUARDADO', player.gridX, player.gridY, '#facc15');
