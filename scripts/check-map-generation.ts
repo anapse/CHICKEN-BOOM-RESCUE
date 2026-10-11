@@ -48,7 +48,7 @@ for (const mode of ['single', 'multiplayer'] as const) {
     ];
     assert(adjacent.every((cell) => cell === 'EMPTY'), `${mode} run ${run}: all objective approaches must be open`);
     assert.equal(grid[1][1], 'EMPTY', `${mode} run ${run}: player 1 spawn must remain clear`);
-    if (mode === 'multiplayer') assert.equal(grid[1][31], 'EMPTY', `multiplayer run ${run}: player 2 spawn must remain clear`);
+    if (mode === 'multiplayer') assert.equal(grid[1][GRID_COLS - 2], 'EMPTY', `multiplayer run ${run}: player 2 spawn must remain clear`);
     assert.equal(trappedAnimals.length, mode === 'single' ? 3 : 0, `${mode} run ${run}: animals belong to single-player only`);
   }
 }
