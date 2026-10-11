@@ -1,4 +1,4 @@
-import { GRID_COLS, GRID_ROWS } from './constants';
+import { GRID_COLS, GRID_ROWS, SCREEN_COLS } from './constants';
 import { CellType, EnemyState, ItemPickup, PickupType, TrappedAnimal } from './types';
 
 export interface GeneratedMap {
@@ -96,22 +96,21 @@ export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): Gene
   // Safe zones for player spawn (Player 1 starts at x: 1, y: 1)
   const safeCells = new Set<string>([
     '1,1', '1,2', '2,1', // P1 spawn & immediate exit
-    '1,15', '1,14', '2,15', // Alternate corner
+    `1,${GRID_ROWS - 2}`, `1,${GRID_ROWS - 3}`, `2,${GRID_ROWS - 2}`, // Alternate corner
   ]);
 
   if (mode === 'multiplayer') {
     // Player 2 starts at bottom-left or top-right
-    safeCells.add('31,1');
-    safeCells.add('31,2');
-    safeCells.add('30,1');
+    safeCells.add(`${GRID_COLS - 2},1`);
+    safeCells.add(`${GRID_COLS - 2},2`);
+    safeCells.add(`${GRID_COLS - 3},1`);
   }
 
   // Fixed Objectives:
-  // Screen 1: cols 0-10
-  // Screen 2: cols 11-21 -> Central Chest Location
-  // Screen 3: cols 22-32 -> Final Cage Location
-  const cageLocation = { x: 29, y: 8 };
-  const chestLocation = { x: 16, y: 8 };
+  // Three screens of 7 columns each: 0-6, 7-13, 14-20.
+  // Keep the 4x3 cage footprint inside the final screen and map borders.
+  const cageLocation = { x: GRID_COLS - 4, y: Math.floor(GRID_ROWS / 2) };
+  const chestLocation = { x: Math.floor(GRID_COLS / 2) - 1, y: Math.floor(GRID_ROWS / 2) };
 
   if (mode === 'single') {
     grid[cageLocation.y][cageLocation.x] = 'CAGE';
@@ -143,7 +142,7 @@ export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): Gene
   let keyLocation = { x: 10, y: 5 };
   if (candidateCrateCells.length > 0) {
     // Choose a crate that is reasonably far (e.g. in screen 2 or screen 1 deep)
-    const midOrDeepCrates = candidateCrateCells.filter(c => c.x >= 7 && c.x <= 24);
+    const midOrDeepCrates = candidateCrateCells.filter(c => c.x >= SCREEN_COLS && c.x <= GRID_COLS - 3);
     const chosenCrate = midOrDeepCrates.length > 0
       ? midOrDeepCrates[Math.floor(Math.random() * midOrDeepCrates.length)]
       : candidateCrateCells[Math.floor(Math.random() * candidateCrateCells.length)];

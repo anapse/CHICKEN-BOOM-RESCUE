@@ -90,7 +90,7 @@ export class GameRenderer {
     const playHeight = Math.max(1, viewportHeight - topPadding - bottomPadding);
     const mapHeight = GRID_ROWS * TILE_SIZE;
     // The level is wider than the viewport and scrolls horizontally, so scale
-    // against height only; fitting all 33 columns would make the game tiny.
+    // against height only; fitting all three screens would make the game tiny.
     const mapScale = playHeight / mapHeight;
     const mapLeft = sidePadding;
 
@@ -104,7 +104,7 @@ export class GameRenderer {
     ctx.translate(mapLeft - cameraX * mapScale, topPadding);
     ctx.scale(mapScale, mapScale);
 
-    // Continuous playable ground: 33 columns × 17 rows, moving with the map.
+    // Continuous playable ground spans all three screens and scrolls with the camera.
     this.renderGround(GRID_COLS, GRID_ROWS);
 
     // 2. Render Grid Cells (Walls, Crates, Cages, Chests)
@@ -383,39 +383,39 @@ export class GameRenderer {
     // Chest box
     ctx.fillStyle = '#78350f';
     ctx.beginPath();
-    ctx.roundRect(x + 6, y + 16, 36, 26, 5);
+    ctx.roundRect(x + TILE_SIZE * 0.12, y + TILE_SIZE * 0.40, TILE_SIZE * 0.76, TILE_SIZE * 0.46, TILE_SIZE * 0.08);
     ctx.fill();
 
     // Gold bands
     ctx.fillStyle = '#eab308';
-    ctx.fillRect(x + 12, y + 16, 5, 26);
-    ctx.fillRect(x + 31, y + 16, 5, 26);
+    ctx.fillRect(x + TILE_SIZE * 0.25, y + TILE_SIZE * 0.40, TILE_SIZE * 0.09, TILE_SIZE * 0.46);
+    ctx.fillRect(x + TILE_SIZE * 0.66, y + TILE_SIZE * 0.40, TILE_SIZE * 0.09, TILE_SIZE * 0.46);
 
     // Glowing Golden Trophy atop
-    const float = Math.sin(this.animTimer * 4) * 3;
+    const float = Math.sin(this.animTimer * 4) * TILE_SIZE * 0.025;
     const tx = x + TILE_SIZE / 2;
-    const ty = y + 10 + float;
+    const ty = y + TILE_SIZE * 0.25 + float;
 
     ctx.fillStyle = '#facc15';
     // Trophy cup bowl
     ctx.beginPath();
-    ctx.arc(tx, ty, 8, 0, Math.PI, false);
-    ctx.lineTo(tx + 4, ty + 6);
-    ctx.lineTo(tx - 4, ty + 6);
+    ctx.arc(tx, ty, TILE_SIZE * 0.12, 0, Math.PI, false);
+    ctx.lineTo(tx + TILE_SIZE * 0.06, ty + TILE_SIZE * 0.10);
+    ctx.lineTo(tx - TILE_SIZE * 0.06, ty + TILE_SIZE * 0.10);
     ctx.closePath();
     ctx.fill();
 
     // Trophy handles
     ctx.strokeStyle = '#eab308';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = TILE_SIZE * 0.025;
     ctx.beginPath();
-    ctx.arc(tx - 8, ty - 2, 3.5, 0, Math.PI * 2);
-    ctx.arc(tx + 8, ty - 2, 3.5, 0, Math.PI * 2);
+    ctx.arc(tx - TILE_SIZE * 0.12, ty - TILE_SIZE * 0.03, TILE_SIZE * 0.05, 0, Math.PI * 2);
+    ctx.arc(tx + TILE_SIZE * 0.12, ty - TILE_SIZE * 0.03, TILE_SIZE * 0.05, 0, Math.PI * 2);
     ctx.stroke();
 
     // Trophy base
     ctx.fillStyle = '#ca8a04';
-    ctx.fillRect(tx - 6, ty + 6, 12, 3);
+    ctx.fillRect(tx - TILE_SIZE * 0.09, ty + TILE_SIZE * 0.10, TILE_SIZE * 0.18, TILE_SIZE * 0.045);
   }
 
   // 6. PICKUPS & POWER-UPS
@@ -489,7 +489,7 @@ export class GameRenderer {
     const frame = Math.floor((this.animTimer * 8 + bobOffset) % 4);
     const cellWidth = 362;
     const cellHeight = 271.5;
-    const size = 38;
+    const size = TILE_SIZE * 0.38;
     spriteManager.draw(this.ctx, SPRITE_ASSETS.coinRewardSheet.src, {
       x: x - size / 2,
       y: y - size / 2,
@@ -831,13 +831,13 @@ export class GameRenderer {
       const alpha = Math.max(0, 1 - ft.timer / 1.0);
       ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.font = '900 16px "Fredoka", sans-serif';
+      ctx.font = `900 ${TILE_SIZE * 0.17}px "Fredoka", sans-serif`;
       ctx.fillStyle = ft.color;
       ctx.strokeStyle = '#1c0e04';
       ctx.lineWidth = 3;
       ctx.textAlign = 'center';
 
-      const y = ft.y - (1 - ft.timer / 1.0) * 25;
+      const y = ft.y - (1 - ft.timer / 1.0) * TILE_SIZE * 0.26;
       ctx.strokeText(ft.text, ft.x, y);
       ctx.fillText(ft.text, ft.x, y);
       ctx.restore();
