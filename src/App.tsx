@@ -412,7 +412,6 @@ export default function App() {
             volumeLevel={volumeLevel}
             onCycleVolume={handleCycleVolume}
             onPause={() => setStatus('paused')}
-            onOpenHowToPlay={() => setShowHowToPlay(true)}
           />
         )}
 
