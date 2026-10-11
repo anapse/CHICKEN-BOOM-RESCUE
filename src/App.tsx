@@ -412,6 +412,11 @@ export default function App() {
             volumeLevel={volumeLevel}
             onCycleVolume={handleCycleVolume}
             onPause={() => setStatus('paused')}
+            onUseInventorySlot={(slotIndex) => {
+              engineRef.current.useInventorySlot('p1', slotIndex);
+              const activePlayer = engineRef.current.players[0];
+              if (activePlayer) setPlayerMirror({ ...activePlayer, inventory: [...activePlayer.inventory] });
+            }}
           />
         )}
 
