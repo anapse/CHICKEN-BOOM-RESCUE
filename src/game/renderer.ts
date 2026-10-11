@@ -582,7 +582,7 @@ export class GameRenderer {
       // Use the real bomb-with-fuse icon from the provided icon sheet.
       // Source image is 1448×1086; the first bomb icon occupies the upper-left area.
       // Keep it compact within a 96px tile instead of drawing a giant procedural egg.
-      const bombSize = TILE_SIZE * 0.62;
+      const bombSize = TILE_SIZE * 0.9;
       spriteManager.draw(ctx, SPRITE_ASSETS.iconSheet.src, {
         x: bx - (bombSize * pulse) / 2,
         y: by - (bombSize * pulse) / 2,
