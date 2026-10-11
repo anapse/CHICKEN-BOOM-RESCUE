@@ -397,7 +397,7 @@ export default function App() {
           height={viewportH}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          className="w-full h-full object-contain block bg-green-800"
+          className="w-full h-full object-fill block bg-transparent"
           style={{ imageRendering: 'pixelated' }}
         />
 
