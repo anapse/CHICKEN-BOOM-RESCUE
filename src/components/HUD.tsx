@@ -57,7 +57,6 @@ export const HUD: React.FC<HUDProps> = ({
             {player.isGhost && <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border border-white bg-purple-500" />}
           </div>
           <div className="flex min-w-0 flex-col">
-            <span className="truncate text-[10px] font-black leading-tight text-amber-200">{player.name || charConfig.name}</span>
             <span className="flex items-center gap-1 text-[11px] font-black leading-none text-white">
               <Heart size={13} className="shrink-0 fill-red-500 text-red-500" />
               <span>x{player.lives}</span>
