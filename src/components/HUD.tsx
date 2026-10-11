@@ -113,10 +113,6 @@ export const HUD: React.FC<HUDProps> = ({
       <div className="mx-0.5 h-8 w-px shrink-0 bg-amber-500/70" />
       {Array.from({ length: 6 }).map((_, slotIndex) => {
         // Display one slot per power-up type; duplicates become a quantity badge.
-        const item = player.inventory.find((candidate, index) =>
-          player.inventory.indexOf(candidate) === index &&
-          player.inventory.slice(0, index + 1).filter((stored) => stored === candidate).length > 0
-        );
         const uniqueItems = player.inventory.filter((candidate, index) => player.inventory.indexOf(candidate) === index);
         const visibleItem = uniqueItems[slotIndex];
         const itemIndex = visibleItem ? player.inventory.indexOf(visibleItem) : -1;
