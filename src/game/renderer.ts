@@ -574,84 +574,22 @@ export class GameRenderer {
 
     bombs.forEach((bomb) => {
       const bx = bomb.gridX * TILE_SIZE + TILE_SIZE / 2;
-      const by = bomb.gridY * TILE_SIZE + 26;
-
-      // Pulsate scale right before detonation
+      const by = bomb.gridY * TILE_SIZE + TILE_SIZE / 2;
       const urgency = 1 - bomb.timer / 2.0;
       const pulseRate = urgency > 0.6 ? 25 : 12;
-      const scale = 1 + Math.sin(this.animTimer * pulseRate) * (0.08 + urgency * 0.12);
+      const pulse = 1 + Math.sin(this.animTimer * pulseRate) * (0.035 + urgency * 0.045);
 
-      ctx.save();
-      ctx.translate(bx, by);
-      ctx.scale(scale * 4, scale * 4);
-
-      // Egg shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-      ctx.beginPath();
-      ctx.ellipse(0, 14, 14, 6, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Egg Body (White/Cream cartoon egg)
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.ellipse(0, 2, 13, 16, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Egg shading
-      ctx.fillStyle = '#f1f5f9';
-      ctx.beginPath();
-      ctx.ellipse(3, 4, 9, 13, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Red Polka Dots (matching the reference art "huevos con mecha")
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.arc(-5, -3, 3.5, 0, Math.PI * 2);
-      ctx.arc(4, 5, 4, 0, Math.PI * 2);
-      ctx.arc(-3, 10, 3, 0, Math.PI * 2);
-      ctx.arc(6, -6, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Outer outline
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 2.5;
-      ctx.beginPath();
-      ctx.ellipse(0, 2, 13, 16, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Metal fuse collar
-      ctx.fillStyle = '#64748b';
-      ctx.fillRect(-3, -16, 6, 4);
-
-      // Curved fuse rope
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(0, -16);
-      ctx.quadraticCurveTo(8, -20, 6, -26);
-      ctx.stroke();
-
-      // Burning Sparkle / Flame
-      const sparkFlicker = Math.random() * 3;
-      ctx.fillStyle = '#facc15';
-      ctx.beginPath();
-      ctx.arc(6, -26, 4 + sparkFlicker, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = '#ef4444';
-      ctx.beginPath();
-      ctx.arc(6, -26, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      // If remote, draw antenna glow
-      if (bomb.isRemote) {
-        ctx.fillStyle = '#22c55e';
-        ctx.beginPath();
-        ctx.arc(0, 2, 3, 0, Math.PI * 2);
-        ctx.fill();
-      }
-
-      ctx.restore();
+      // Use the real bomb-with-fuse icon from the provided icon sheet.
+      // Source image is 1448×1086; the first bomb icon occupies the upper-left area.
+      // Keep it compact within a 96px tile instead of drawing a giant procedural egg.
+      const bombSize = TILE_SIZE * 0.62;
+      spriteManager.draw(ctx, SPRITE_ASSETS.iconSheet.src, {
+        x: bx - (bombSize * pulse) / 2,
+        y: by - (bombSize * pulse) / 2,
+        width: bombSize * pulse,
+        height: bombSize * pulse,
+        sourceRect: { x: 28, y: 38, width: 330, height: 372 },
+      });
     });
   }
 
