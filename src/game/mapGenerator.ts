@@ -195,9 +195,26 @@ export function generateGameMap(mode: 'single' | 'multiplayer' = 'single'): Gene
 
   for (let y = 1; y < GRID_ROWS - 1; y++) {
     for (let x = 4; x < GRID_COLS - 2; x++) {
-      if (grid[y][x] === 'EMPTY' && !safeCells.has(`${x},${y}`)) {
-        emptyWalkableCells.push({ x, y });
-      }
+      if (grid[y][x] !== 'EMPTY' || safeCells.has(`${x},${y}`)) continue;
+
+      // Never spawn a fox in an isolated EMPTY pocket surrounded by crates/walls.
+      // Each fox starts with at least one open neighbor so its first automatic
+      // movement can begin immediately; dead ends remain reversible because the
+      // previous cell stays EMPTY.
+      const hasOpenNeighbor = [
+        { x: x, y: y - 1 },
+        { x: x, y: y + 1 },
+        { x: x - 1, y: y },
+        { x: x + 1, y: y },
+      ].some(({ x: nx, y: ny }) =>
+        nx > 0 &&
+        nx < GRID_COLS - 1 &&
+        ny > 0 &&
+        ny < GRID_ROWS - 1 &&
+        grid[ny][nx] === 'EMPTY'
+      );
+
+      if (hasOpenNeighbor) emptyWalkableCells.push({ x, y });
     }
   }
 
