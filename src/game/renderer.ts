@@ -78,11 +78,11 @@ export class GameRenderer {
     const bottomPadding = 72;
     const playWidth = Math.max(1, viewportWidth - sidePadding * 2);
     const playHeight = Math.max(1, viewportHeight - topPadding - bottomPadding);
-    const mapWidth = GRID_COLS * TILE_SIZE;
     const mapHeight = GRID_ROWS * TILE_SIZE;
-    const mapScale = Math.min(playWidth / mapWidth, playHeight / mapHeight);
-    const scaledMapWidth = mapWidth * mapScale;
-    const mapLeft = sidePadding + (playWidth - scaledMapWidth) / 2;
+    // The level is wider than the viewport and scrolls horizontally, so scale
+    // against height only; fitting all 33 columns would make the game tiny.
+    const mapScale = playHeight / mapHeight;
+    const mapLeft = sidePadding;
 
     // Keep the entire map, its walls, collisions, pickups and characters in
     // the same coordinate system. Only the renderer's presentation is scaled.
