@@ -94,14 +94,18 @@ export class GameRenderer {
     const mapScale = playHeight / mapHeight;
     const mapLeft = sidePadding;
 
-    // Keep the entire map, its walls, collisions, pickups and characters in
-    // the same coordinate system. Only the renderer's presentation is scaled.
+    // Keep the entire map, its ground, walls, pickups and characters in the
+    // same world coordinate system. The ground spans all 3 screens and scrolls
+    // with cameraX instead of staying fixed behind moving wall tiles.
     ctx.save();
     ctx.beginPath();
     ctx.rect(sidePadding, topPadding, playWidth, playHeight);
     ctx.clip();
     ctx.translate(mapLeft - cameraX * mapScale, topPadding);
     ctx.scale(mapScale, mapScale);
+
+    // Continuous playable ground: 33 columns × 17 rows, moving with the map.
+    this.renderGround(GRID_COLS, GRID_ROWS);
 
     // 2. Render Grid Cells (Walls, Crates, Cages, Chests)
     this.renderGrid(grid, isCageUnlocked, hasKey);
