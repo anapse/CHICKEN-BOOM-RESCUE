@@ -282,7 +282,7 @@ export class GameEngine {
 
   // --- UPDATE LOOP ---
 
-  public update(deltaTime: number, viewportWidth: number) {
+  public update(deltaTime: number, viewportWidth: number, viewportHeight: number) {
     if (this.isGameOver || this.isVictory) return;
 
     // Timer countdown
@@ -313,8 +313,12 @@ export class GameEngine {
 
     // 7. Update Camera tracking Player 1 smoothly
     if (this.players[0]) {
-      const targetCam = this.players[0].x * TILE_SIZE - viewportWidth / 2;
-      const maxCam = GRID_COLS * TILE_SIZE - viewportWidth;
+      const playWidth = Math.max(1, viewportWidth - 24);
+      const playHeight = Math.max(1, viewportHeight - 88 - 72);
+      const mapScale = playHeight / (GRID_ROWS * TILE_SIZE);
+      const visibleWorldWidth = playWidth / mapScale;
+      const targetCam = this.players[0].x * TILE_SIZE - visibleWorldWidth / 2;
+      const maxCam = GRID_COLS * TILE_SIZE - visibleWorldWidth;
       const clampedCam = Math.max(0, Math.min(maxCam, targetCam));
       // Smooth interpolation
       this.cameraX += (clampedCam - this.cameraX) * 0.12;
