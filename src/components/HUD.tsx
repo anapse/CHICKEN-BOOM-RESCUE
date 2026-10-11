@@ -65,18 +65,9 @@ export const HUD: React.FC<HUDProps> = ({
             <span className="text-[10px] font-black text-amber-200 tracking-wider truncate max-w-[62px] leading-tight">
               {player.name || charConfig.name}
             </span>
-            <div className="flex items-center gap-1 mt-0.5">
-              {Array.from({ length: player.maxLives }).map((_, i) => (
-                <Heart
-                  key={i}
-                  size={12}
-                  className={`transition-transform ${
-                    i < player.lives
-                      ? 'text-red-500 fill-red-500 drop-shadow-[0_0_4px_rgba(239,68,68,0.7)] animate-pulse'
-                      : 'text-zinc-600 fill-zinc-800'
-                  }`}
-                />
-              ))}
+            <div className="flex items-center gap-1 mt-0.5 text-red-400">
+              <Heart size={13} className="fill-red-500 shrink-0" />
+              <span className="text-[10px] leading-none font-black text-white">x{player.lives}</span>
             </div>
           </div>
         </div>
@@ -132,18 +123,14 @@ export const HUD: React.FC<HUDProps> = ({
         </div>
       </div>
 
-      {/* Sub-bar: Score & Coins banner */}
+      {/* Single score counter: coins and score are the same currency */}
       <div className="flex items-center justify-between max-w-full mx-auto w-full px-1 pointer-events-auto">
-        <div className="bg-amber-950/80 backdrop-blur-sm border border-amber-700/60 px-2.5 py-0.5 rounded-full text-[11px] font-black text-amber-300 flex items-center gap-1 shadow">
-          <span>SCORE:</span>
-          <span className="text-white text-xs">{player.score}</span>
-        </div>
-
-        <div className="bg-amber-950/80 backdrop-blur-sm border border-amber-700/60 px-2.5 py-0.5 rounded-full text-[11px] font-black text-yellow-400 flex items-center gap-1 shadow">
-          <span>🪙 MONEDAS:</span>
-          <span className="text-white text-xs">{player.coins}</span>
+        <div className="bg-amber-950/90 backdrop-blur-sm border border-amber-600/70 px-2.5 py-0.5 rounded-full text-[11px] font-black text-amber-300 flex items-center gap-1 shadow">
+          <span>SCORE</span>
+          <span className="text-white text-xs tabular-nums">{player.score}</span>
         </div>
       </div>
+div>
     </header>
   );
 };
