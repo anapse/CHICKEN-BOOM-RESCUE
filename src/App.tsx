@@ -239,7 +239,7 @@ export default function App() {
       lastTimeRef.current = timestamp;
 
       if (status === 'playing') {
-        engine.update(deltaTime, viewportW);
+        engine.update(deltaTime, viewportW, viewportH);
 
         // Update mirrors for React HUD
         // Freeze the displayed player snapshot when an ending is triggered.
