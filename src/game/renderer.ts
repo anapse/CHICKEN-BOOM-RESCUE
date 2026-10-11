@@ -427,7 +427,7 @@ export class GameRenderer {
           this.drawKeyPickup(px, py);
           break;
         case 'COIN':
-          this.drawCoinPickup(px, py);
+          this.drawCoinPickup(px, py, item.bobOffset);
           break;
         case 'HEART':
           this.drawHeartPickup(px, py);
@@ -475,22 +475,25 @@ export class GameRenderer {
     ctx.fillRect(x + 11, y + 2, 3, 5);
   }
 
-  private drawCoinPickup(x: number, y: number) {
-    const ctx = this.ctx;
-    ctx.fillStyle = '#eab308';
-    ctx.beginPath();
-    ctx.arc(x, y, 10, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = '#ca8a04';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.fillStyle = '#fef08a';
-    ctx.font = 'bold 10px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('$', x, y);
+  private drawCoinPickup(x: number, y: number, bobOffset: number) {
+    // Use the four original coin views in the first row of the rewards sheet.
+    // Cycling front → angled → edge → angled creates a continuous spinning effect.
+    const frame = Math.floor((this.animTimer * 8 + bobOffset) % 4);
+    const cellWidth = 362;
+    const cellHeight = 271.5;
+    const size = 38;
+    spriteManager.draw(this.ctx, SPRITE_ASSETS.coinRewardSheet.src, {
+      x: x - size / 2,
+      y: y - size / 2,
+      width: size,
+      height: size,
+      sourceRect: {
+        x: frame * cellWidth,
+        y: 0,
+        width: cellWidth,
+        height: cellHeight,
+      },
+    });
   }
 
   private drawHeartPickup(x: number, y: number) {
