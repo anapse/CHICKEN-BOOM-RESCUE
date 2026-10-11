@@ -1,10 +1,10 @@
 import { CharacterConfig } from './types';
 
-export const TILE_SIZE = 96; // Double every map cell and render each tile sprite at 200% scale.
-export const SCREEN_COLS = 11;
+export const TILE_SIZE = 160; // Larger tiles; renderer scales world sprites proportionally.
+export const SCREEN_COLS = 7;
 export const TOTAL_SCREENS = 3;
-export const GRID_COLS = SCREEN_COLS * TOTAL_SCREENS; // 33 columns
-export const GRID_ROWS = 17; // 17 rows
+export const GRID_COLS = SCREEN_COLS * TOTAL_SCREENS; // 21 columns across 3 screens
+export const GRID_ROWS = 11; // 11 rows
 
 export const DEFAULT_GAME_TIME_SECONDS = 300; // 5 minutes
 export const BOMB_FUSE_SECONDS = 2.0;
