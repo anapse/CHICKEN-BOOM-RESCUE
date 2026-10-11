@@ -250,9 +250,9 @@ export class GameRenderer {
       ctx.save();
       ctx.translate(x + TILE_SIZE / 2, y + TILE_SIZE / 2);
       ctx.rotate(rotation);
-      // Slightly overlap neighboring wall tiles to hide atlas edge seams
-      // after the whole map is scaled to fit the vertical play area.
-      const drawSize = TILE_SIZE + 2;
+      // Overlap adjacent perimeter tiles enough to hide seams introduced by
+      // fractional scaling. The grid/collision coordinates remain unchanged.
+      const drawSize = TILE_SIZE + 8;
       ctx.drawImage(
         sprite,
         887, 0, 887, 887,
@@ -263,9 +263,9 @@ export class GameRenderer {
     }
 
     spriteManager.draw(ctx, SPRITE_ASSETS.woodStoneTiles.src, {
-      // Extend by one logical pixel on each side so adjoining bricks and
-      // bricks next to crates do not reveal hairline gaps from scaling.
-      x: x - 1, y: y - 1, width: TILE_SIZE + 2, height: TILE_SIZE + 2,
+      // Extend four logical pixels on each side to close visible seams after
+      // scaling, including the joints along the bottom wall and beside crates.
+      x: x - 4, y: y - 4, width: TILE_SIZE + 8, height: TILE_SIZE + 8,
       sourceRect: { x: 887, y: 0, width: 887, height: 887 },
     });
   }
