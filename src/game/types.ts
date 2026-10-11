@@ -62,6 +62,7 @@ export interface BombState {
   ownerId: string;
   range: number;
   isRemote: boolean;
+  bombType: 'NORMAL' | 'DOUBLE' | 'TRIPLE' | 'REMOTE';
   timer: number;       // ~2.0s
   detonated: boolean;
   pulsate: number;
