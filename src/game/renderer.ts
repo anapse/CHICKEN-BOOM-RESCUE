@@ -445,8 +445,8 @@ export class GameRenderer {
       const cell = spriteCell[item.type];
       if (cell) {
         const size = TILE_SIZE * 0.78;
-        const colW = 362;
-        const rowH = 362;
+        const colW = 350;
+        const rowH = 350;
         spriteManager.draw(ctx, SPRITE_ASSETS.iconSheet.src, {
           x: px - size / 2,
           y: py - size / 2,
@@ -642,7 +642,7 @@ export class GameRenderer {
         y: by - (bombSize * pulse) / 2,
         width: bombSize * pulse,
         height: bombSize * pulse,
-        sourceRect: { x: bombCell.col * 362, y: bombCell.row * 362, width: 362, height: 362 },
+        sourceRect: { x: bombCell.col * 350, y: bombCell.row * 350, width: 350, height: 350 },
       });
     });
   }
