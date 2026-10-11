@@ -66,9 +66,19 @@ export class GameRenderer {
 
     // Background fills the whole screen, including behind the HUD and the
     // lower power-up area. It is deliberately not translated with the camera.
+    // Extend one tile past the viewport edges to prevent any uncovered strip
+    // caused by fractional canvas/CSS scaling at the bottom or right edge.
     this.renderGround(
-      Math.ceil(viewportWidth / TILE_SIZE),
-      Math.ceil(viewportHeight / TILE_SIZE),
+      Math.ceil(viewportWidth / TILE_SIZE) + 1,
+      Math.ceil(viewportHeight / TILE_SIZE) + 1,
+    );
+    // Guarantee that the entire canvas is covered even if the background asset
+    // or its repeat pattern has unexpected dimensions.
+    ctx.fillStyle = '#65a30d';
+    ctx.fillRect(0, 0, viewportWidth, viewportHeight);
+    this.renderGround(
+      Math.ceil(viewportWidth / TILE_SIZE) + 1,
+      Math.ceil(viewportHeight / TILE_SIZE) + 1,
     );
 
     // Reserve space for the top HUD and the lower controls without cutting off
