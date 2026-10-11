@@ -427,41 +427,38 @@ export class GameRenderer {
       const bob = Math.sin(this.animTimer * 5 + item.bobOffset) * 4;
       const py = item.gridY * TILE_SIZE + TILE_SIZE / 2 + bob;
 
-      // Glow behind pickup
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-      ctx.beginPath();
-      ctx.arc(px, py, 18, 0, Math.PI * 2);
-      ctx.fill();
-
-      switch (item.type) {
-        case 'KEY':
-          this.drawKeyPickup(px, py);
-          break;
-        case 'COIN':
-          this.drawCoinPickup(px, py, item.bobOffset);
-          break;
-        case 'HEART':
-          this.drawHeartPickup(px, py);
-          break;
-        case 'POWERUP_DOUBLE_EGG':
-          this.drawEggPowerupPickup(px, py, 2);
-          break;
-        case 'POWERUP_TRIPLE_EGG':
-          this.drawEggPowerupPickup(px, py, 3);
-          break;
-        case 'POWERUP_SPEED':
-          this.drawSpeedBootPickup(px, py);
-          break;
-        case 'POWERUP_SHIELD':
-          this.drawShieldPickup(px, py);
-          break;
-        case 'POWERUP_GHOST':
-          this.drawGhostPickup(px, py);
-          break;
-        case 'POWERUP_REMOTE':
-          this.drawRemotePickup(px, py);
-          break;
+      if (item.type === 'COIN') {
+        this.drawCoinPickup(px, py, item.bobOffset);
+        return;
       }
+
+      // All collectible power-ups use the matching original icon-sheet cell.
+      const spriteCell: Record<string, { col: number; row: number }> = {
+        HEART: { col: 0, row: 2 },
+        POWERUP_DOUBLE_EGG: { col: 1, row: 0 },
+        POWERUP_TRIPLE_EGG: { col: 2, row: 0 },
+        POWERUP_SPEED: { col: 0, row: 1 },
+        POWERUP_SHIELD: { col: 1, row: 1 },
+        POWERUP_GHOST: { col: 2, row: 1 },
+        POWERUP_REMOTE: { col: 3, row: 0 },
+      };
+      const cell = spriteCell[item.type];
+      if (cell) {
+        const size = TILE_SIZE * 0.78;
+        const colW = 362;
+        const rowH = 362;
+        spriteManager.draw(ctx, SPRITE_ASSETS.iconSheet.src, {
+          x: px - size / 2,
+          y: py - size / 2,
+          width: size,
+          height: size,
+          sourceRect: { x: cell.col * colW, y: cell.row * rowH, width: colW, height: rowH },
+        });
+        return;
+      }
+
+      // Key has its own existing drawing until a dedicated key sprite is mapped.
+      if (item.type === 'KEY') this.drawKeyPickup(px, py);
     });
   }
 
@@ -639,12 +636,13 @@ export class GameRenderer {
       // Source image is 1448×1086; the first bomb icon occupies the upper-left area.
       // Keep it compact within a 96px tile instead of drawing a giant procedural egg.
       const bombSize = TILE_SIZE * 0.9;
+      const bombCell = bomb.bombType === 'DOUBLE' ? { col: 1, row: 0 } : bomb.bombType === 'TRIPLE' ? { col: 2, row: 0 } : bomb.isRemote ? { col: 3, row: 0 } : { col: 0, row: 0 };
       spriteManager.draw(ctx, SPRITE_ASSETS.iconSheet.src, {
         x: bx - (bombSize * pulse) / 2,
         y: by - (bombSize * pulse) / 2,
         width: bombSize * pulse,
         height: bombSize * pulse,
-        sourceRect: { x: 28, y: 38, width: 330, height: 372 },
+        sourceRect: { x: bombCell.col * 362, y: bombCell.row * 362, width: 362, height: 362 },
       });
     });
   }
