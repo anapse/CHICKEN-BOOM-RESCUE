@@ -44,8 +44,8 @@ export class GameEngine {
   public isGameOver = false;
   public isVictory = false;
   public winnerPlayerId: string | null = null;
-  public cageLocation = { x: 29, y: 8 };
-  public chestLocation = { x: 16, y: 8 };
+  public cageLocation = { x: GRID_COLS - 4, y: Math.floor(GRID_ROWS / 2) };
+  public chestLocation = { x: Math.floor(GRID_COLS / 2) - 1, y: Math.floor(GRID_ROWS / 2) };
 
   constructor() {}
 
@@ -116,11 +116,11 @@ export class GameEngine {
         id: 'p2',
         name: config.player2Name || 'Jugador 2',
         characterId: config.player2Char || 'rambo_hembra',
-        gridX: 31,
+        gridX: GRID_COLS - 2,
         gridY: 1,
-        x: 31,
+        x: GRID_COLS - 2,
         y: 1,
-        targetGridX: 31,
+        targetGridX: GRID_COLS - 2,
         targetGridY: 1,
         direction: 'LEFT',
         isMoving: false,
