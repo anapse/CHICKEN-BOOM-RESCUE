@@ -289,74 +289,85 @@ export class GameRenderer {
     });
   }
 
-  // 4. ANIMAL CAGE (Single Player Goal)
+  // 4. ANIMAL CAGE: 4 columns × 3 rows, centered on the cage map cell.
   private drawAnimalCage(x: number, y: number, isUnlocked: boolean, hasKey: boolean) {
     const ctx = this.ctx;
+    const width = TILE_SIZE * 4;
+    const height = TILE_SIZE * 3;
+    const left = x - TILE_SIZE * 1.5;
+    const top = y - TILE_SIZE;
+    const inset = TILE_SIZE * 0.12;
 
-    // Floor of cage
+    // Wooden floor fills the complete 4×3 footprint.
     ctx.fillStyle = '#78350f';
-    ctx.fillRect(x + 2, y + 10, TILE_SIZE - 4, TILE_SIZE - 12);
+    ctx.fillRect(left, top, width, height);
+    ctx.fillStyle = '#92400e';
+    for (let row = 1; row < 3; row++) {
+      ctx.fillRect(left + 4, top + row * TILE_SIZE, width - 8, 2);
+    }
 
     if (isUnlocked) {
-      // Open broken bars and celebration glow
-      ctx.fillStyle = 'rgba(250, 204, 21, 0.4)';
+      // Open cage: broken bars and a golden celebration glow.
+      ctx.fillStyle = 'rgba(250, 204, 21, 0.22)';
+      ctx.fillRect(left, top, width, height);
+      ctx.strokeStyle = '#d4d4d8';
+      ctx.lineWidth = 5;
       ctx.beginPath();
-      ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE / 2, TILE_SIZE * 0.46, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = '#a1a1aa';
-      ctx.lineWidth = 3;
-      // Bent bars
-      ctx.beginPath();
-      ctx.moveTo(x + 6, y + 12);
-      ctx.lineTo(x + 2, y + 42);
-      ctx.moveTo(x + 42, y + 12);
-      ctx.lineTo(x + 46, y + 42);
+      ctx.moveTo(left + inset, top + TILE_SIZE * 0.25);
+      ctx.lineTo(left + inset * 0.55, top + TILE_SIZE * 1.2);
+      ctx.moveTo(left + width - inset, top + TILE_SIZE * 0.25);
+      ctx.lineTo(left + width - inset * 0.55, top + TILE_SIZE * 1.2);
+      ctx.moveTo(left + width * 0.28, top + height - 5);
+      ctx.lineTo(left + width * 0.35, top + height - TILE_SIZE * 0.35);
+      ctx.moveTo(left + width * 0.72, top + height - 5);
+      ctx.lineTo(left + width * 0.65, top + height - TILE_SIZE * 0.35);
       ctx.stroke();
-    } else {
-      // Closed bars
-      ctx.strokeStyle = '#52525b';
-      ctx.lineWidth = 3;
-      for (let barX = x + 8; barX <= x + TILE_SIZE - 8; barX += 8) {
-        ctx.beginPath();
-        ctx.moveTo(barX, y + 10);
-        ctx.lineTo(barX, y + TILE_SIZE - 4);
-        ctx.stroke();
-      }
-
-      // Wooden Roof
-      ctx.fillStyle = '#b45309';
-      ctx.beginPath();
-      ctx.moveTo(x, y + 12);
-      ctx.lineTo(x + TILE_SIZE / 2, y + TILE_SIZE * 0.04);
-      ctx.lineTo(x + TILE_SIZE, y + 12);
-      ctx.closePath();
-      ctx.fill();
-      ctx.strokeStyle = '#78350f';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Padlock in center
-      ctx.fillStyle = hasKey ? '#facc15' : '#71717a';
-      ctx.beginPath();
-      ctx.roundRect(x + 18, y + 22, 12, 10, 2);
-      ctx.fill();
-
-      // Lock loop
-      ctx.strokeStyle = hasKey ? '#eab308' : '#a1a1aa';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE * 0.46, TILE_SIZE * 0.083, Math.PI, 0);
-      ctx.stroke();
-
-      if (hasKey) {
-        // Glowing keyhole
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.arc(x + TILE_SIZE / 2, y + TILE_SIZE * 0.54, TILE_SIZE * 0.031, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      return;
     }
+
+    // Roof and frame span all four columns.
+    ctx.fillStyle = '#b45309';
+    ctx.beginPath();
+    ctx.moveTo(left, top + TILE_SIZE * 0.42);
+    ctx.lineTo(left + width / 2, top - TILE_SIZE * 0.08);
+    ctx.lineTo(left + width, top + TILE_SIZE * 0.42);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#78350f';
+    ctx.lineWidth = 5;
+    ctx.stroke();
+
+    // Vertical bars across the 4×3 enclosure.
+    ctx.strokeStyle = '#52525b';
+    ctx.lineWidth = 5;
+    for (let barX = left + inset; barX <= left + width - inset; barX += TILE_SIZE * 0.5) {
+      ctx.beginPath();
+      ctx.moveTo(barX, top + TILE_SIZE * 0.38);
+      ctx.lineTo(barX, top + height - 4);
+      ctx.stroke();
+    }
+    // Horizontal reinforcement bars.
+    ctx.lineWidth = 3;
+    for (let row = 1; row <= 2; row++) {
+      const barY = top + row * TILE_SIZE;
+      ctx.beginPath();
+      ctx.moveTo(left, barY);
+      ctx.lineTo(left + width, barY);
+      ctx.stroke();
+    }
+
+    // Lock centered on the full enclosure; it changes color when the key is held.
+    const lockX = left + width / 2;
+    const lockY = top + height * 0.52;
+    ctx.fillStyle = hasKey ? '#facc15' : '#71717a';
+    ctx.beginPath();
+    ctx.roundRect(lockX - 12, lockY - 5, 24, 22, 4);
+    ctx.fill();
+    ctx.strokeStyle = hasKey ? '#eab308' : '#a1a1aa';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(lockX, lockY - 5, 9, Math.PI, 0);
+    ctx.stroke();
   }
 
   // 5. TROPHY CHEST (Multiplayer Goal)
@@ -778,65 +789,39 @@ export class GameRenderer {
     ctx.restore();
   }
 
-  // 11. TRAPPED / RESCUED ANIMALS (PIGLET, SHEEP, BUNNY)
+  // 11. TRAPPED / RESCUED ANIMALS: use original sad/happy sprites.
   private renderAnimals(animals: TrappedAnimal[], isCageUnlocked: boolean) {
-    const ctx = this.ctx;
+    const sprite = SPRITE_ASSETS.animalSheet.src;
+    const cellW = 512;
+    const cellH = 512;
+    const positions = [-1, 0, 1];
 
     animals.forEach((animal, idx) => {
-      const ax = animal.x * TILE_SIZE + TILE_SIZE / 2;
-      let ay = animal.y * TILE_SIZE + 28;
-
+      // Keep all three animals centered inside the 4×3 cage footprint.
+      const ax = (animal.x + positions[idx] * 0.72) * TILE_SIZE + TILE_SIZE / 2;
+      let ay = (animal.y + 0.35) * TILE_SIZE + TILE_SIZE / 2;
       if (isCageUnlocked) {
-        // Jumping in joy!
-        const hop = Math.abs(Math.sin(this.animTimer * 10 + idx * 1.5)) * 12;
+        const hop = Math.abs(Math.sin(this.animTimer * 10 + idx * 1.5)) * TILE_SIZE * 0.16;
         ay -= hop;
       }
 
-      ctx.save();
-      ctx.translate(ax, ay);
-
-      if (animal.type === 'piglet') {
-        // Cute pink piglet
-        ctx.fillStyle = '#f472b6';
-        ctx.beginPath();
-        ctx.arc(0, 0, 9, 0, Math.PI * 2);
-        ctx.fill();
-        // Snout
-        ctx.fillStyle = '#ec4899';
-        ctx.beginPath();
-        ctx.ellipse(0, 2, 4, 2.5, 0, 0, Math.PI * 2);
-        ctx.fill();
-        // Ears
-        ctx.beginPath();
-        ctx.arc(-6, -7, 3, 0, Math.PI * 2);
-        ctx.arc(6, -7, 3, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (animal.type === 'sheep') {
-        // Fluffy white sheep
-        ctx.fillStyle = '#f1f5f9';
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI * 2);
-        ctx.arc(-5, -4, 5, 0, Math.PI * 2);
-        ctx.arc(5, -4, 5, 0, Math.PI * 2);
-        ctx.fill();
-        // Face
-        ctx.fillStyle = '#334155';
-        ctx.beginPath();
-        ctx.ellipse(0, 2, 4, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Bunny
-        ctx.fillStyle = '#e2e8f0';
-        ctx.beginPath();
-        ctx.arc(0, 2, 8, 0, Math.PI * 2);
-        ctx.fill();
-        // Long ears
-        ctx.fillStyle = '#f1f5f9';
-        ctx.fillRect(-5, -12, 3, 10);
-        ctx.fillRect(2, -12, 3, 10);
-      }
-
-      ctx.restore();
+      // Sheet: row 0 = crying/trapped, row 1 = happy/rescued.
+      // Columns: pig, monkey, bunny. Use the original supplied art without redrawing.
+      const column = animal.type === 'piglet' ? 0 : animal.type === 'sheep' ? 1 : 2;
+      const row = isCageUnlocked ? 1 : 0;
+      const size = TILE_SIZE * 0.9;
+      spriteManager.draw(this.ctx, sprite, {
+        x: ax - size / 2,
+        y: ay - size / 2,
+        width: size,
+        height: size,
+        sourceRect: {
+          x: column * cellW,
+          y: row * cellH,
+          width: cellW,
+          height: cellH,
+        },
+      });
     });
   }
 
