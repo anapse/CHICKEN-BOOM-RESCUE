@@ -12,6 +12,7 @@ interface HUDProps {
   volumeLevel: SoundVolumeLevel;
   onCycleVolume: () => void;
   onPause: () => void;
+  onUseInventorySlot: (slotIndex: number) => void;
 }
 
 export const HUD: React.FC<HUDProps> = ({
@@ -21,6 +22,7 @@ export const HUD: React.FC<HUDProps> = ({
   volumeLevel,
   onCycleVolume,
   onPause,
+  onUseInventorySlot,
 }) => {
   const charConfig = CHARACTERS.find((c) => c.id === player.characterId) || CHARACTERS[0];
   const mins = Math.floor(timeRemaining / 60);
